@@ -37,7 +37,12 @@
   --cinza:        #555E6E;  --cinza-fundo:    #EEF0F3;
 
   /* Tipo */
-  --fonte:  "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* Calibri vem com o Windows/Office. Onde ela não existe (Mac, celular,
+     Linux), entra a Carlito: mesmas medidas, então o layout não muda.
+     Ela só tem dois pesos (normal e negrito), por isso o sistema usa
+     apenas 400 e 700: negrito fica para títulos, botões e rótulos. */
+  --fonte:  Calibri, "Carlito", "Segoe UI", system-ui, sans-serif;
+  --fonte-logo: "Inter", "Segoe UI", system-ui, sans-serif;
   --mono:   "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
   /* Raios: hierarquia, não um valor só para tudo */
@@ -55,14 +60,14 @@ html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0;
   font-family: var(--fonte);
-  font-size: 14px;
+  font-size: 15px;
   line-height: 1.5;
   color: var(--texto);
   background: var(--fundo);
   -webkit-font-smoothing: antialiased;
 }
 
-h1, h2, h3 { margin: 0; font-weight: 600; letter-spacing: -0.01em; line-height: 1.25; }
+h1, h2, h3 { margin: 0; font-weight: 700; letter-spacing: -0.01em; line-height: 1.25; }
 
 a { color: var(--azul); }
 
@@ -79,7 +84,7 @@ a { color: var(--azul); }
    LOGO
 ================================================================= */
 .logo {
-  font-family: var(--fonte);
+  font-family: var(--fonte-logo);
   font-weight: 700;
   letter-spacing: -0.04em;
   line-height: 1;
@@ -100,7 +105,7 @@ textarea {
   min-height: 40px;
   padding: 9px 12px;
   font: inherit;
-  font-size: 14px;
+  font-size: 15px;
   color: var(--texto);
   background-color: var(--superficie);
   border: 1px solid var(--borda-forte);
@@ -143,7 +148,7 @@ input[type="checkbox"] {
   cursor: pointer;
 }
 
-label { font-size: 13px; font-weight: 500; color: var(--texto); }
+label { font-size: 14px; font-weight: 700; color: var(--texto); }
 
 /* =================================================================
    BOTÕES
@@ -163,8 +168,8 @@ label { font-size: 13px; font-weight: 500; color: var(--texto); }
   min-height: 40px;
   padding: 0 16px;
   font: inherit;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 15px;
+  font-weight: 700;
   border-radius: var(--raio-p);
   border: 1px solid transparent;
   cursor: pointer;
@@ -204,7 +209,7 @@ label { font-size: 13px; font-weight: 500; color: var(--texto); }
   cursor: not-allowed;
 }
 
-.btn-small { min-height: 32px; padding: 0 12px; font-size: 13px; }
+.btn-small { min-height: 32px; padding: 0 12px; font-size: 14px; }
 
 /* Onde o JS cria vários .btn-verde juntos, só o primeiro fica como ação
    principal; os demais viram secundários para não competir entre si. */
@@ -250,8 +255,8 @@ label { font-size: 13px; font-weight: 500; color: var(--texto); }
   bottom: calc(100% + 6px);
   right: 0;
   padding: 3px 8px;
-  font-size: 12px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 400;
   color: #fff;
   background: var(--tinta);
   border-radius: 4px;
@@ -265,8 +270,8 @@ label { font-size: 13px; font-weight: 500; color: var(--texto); }
   display: inline;
   padding: 0;
   font: inherit;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 400;
   color: var(--azul);
   background: none;
   border: none;
@@ -280,12 +285,12 @@ label { font-size: 13px; font-weight: 500; color: var(--texto); }
 /* =================================================================
    MENSAGENS
 ================================================================= */
-.painel-aviso { color: var(--texto-2); font-size: 13px; margin: 0; }
+.painel-aviso { color: var(--texto-2); font-size: 14px; margin: 0; }
 
 .msg-feedback {
   margin: 12px 0 0;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 400;
   color: var(--verde);
   min-height: 18px;
 }
@@ -317,7 +322,7 @@ label { font-size: 13px; font-weight: 500; color: var(--texto); }
 .auth-titulo {
   margin: 0 0 12px;
   font-size: 22px;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.3;
   letter-spacing: -0.015em;
 }
@@ -328,7 +333,7 @@ label { font-size: 13px; font-weight: 500; color: var(--texto); }
   color: var(--tinta-texto);
 }
 .auth-marca .logo { font-size: clamp(64px, 8vw, 116px); }
-.auth-rodape { margin: 0; font-size: 13px; color: var(--tinta-texto); }
+.auth-rodape { margin: 0; font-size: 14px; color: var(--tinta-texto); }
 
 .auth-form {
   display: flex;
@@ -343,7 +348,7 @@ label { font-size: 13px; font-weight: 500; color: var(--texto); }
 
 .login-card .instrucao {
   margin: 0 0 28px;
-  font-size: 14px;
+  font-size: 15px;
   color: var(--texto-2);
 }
 
@@ -446,8 +451,8 @@ label { font-size: 13px; font-weight: 500; color: var(--texto); }
   align-items: center;
   gap: 10px;
   padding: 9px 10px;
-  font-size: 14px;
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 400;
   color: var(--tinta-texto);
   text-decoration: none;
   border-radius: var(--raio-p);
@@ -455,14 +460,14 @@ label { font-size: 13px; font-weight: 500; color: var(--texto); }
 }
 .nav-item svg { width: 18px; height: 18px; flex: none; }
 .nav-item:hover { background: var(--tinta-2); color: #fff; }
-.nav-item.ativo { background: rgba(255, 255, 255, 0.1); color: #fff; }
+.nav-item.ativo { background: rgba(255, 255, 255, 0.1); color: #fff; font-weight: 700; }
 
 .nav-badge {
   margin-left: auto;
   min-width: 20px;
   padding: 1px 7px;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
   text-align: center;
   color: #fff;
   background: var(--azul);
@@ -484,8 +489,8 @@ label { font-size: 13px; font-weight: 500; color: var(--texto); }
   flex: none;
   width: 32px;
   height: 32px;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 700;
   color: var(--tinta);
   background: #C9D4F5;
   border-radius: 50%;
@@ -493,22 +498,22 @@ label { font-size: 13px; font-weight: 500; color: var(--texto); }
 .avatar:empty { visibility: hidden; }
 .sidebar-usuario-texto { min-width: 0; display: flex; flex-direction: column; }
 .usuario-logado {
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 700;
   color: #fff;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.usuario-papel { font-size: 12px; color: var(--tinta-texto); }
+.usuario-papel { font-size: 13px; color: var(--tinta-texto); }
 
 .btn-sair {
   margin-left: auto;
   flex: none;
   padding: 6px 10px;
   font: inherit;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 400;
   color: var(--tinta-texto);
   background: none;
   border: 1px solid rgba(255, 255, 255, 0.16);
@@ -568,8 +573,8 @@ label { font-size: 13px; font-weight: 500; color: var(--texto); }
 }
 .convenio-empresa {
   margin: 0 0 4px;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 400;
   color: var(--texto-2);
 }
 .convenio-nome { font-size: 22px; word-break: break-word; }
@@ -614,8 +619,8 @@ label { font-size: 13px; font-weight: 500; color: var(--texto); }
 .acesso-extra-titulo[hidden] + p { border-top: 0 !important; }
 
 .acesso-extra-card > p > strong {
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 400;
   color: var(--texto-2);
 }
 
@@ -628,7 +633,7 @@ label { font-size: 13px; font-weight: 500; color: var(--texto); }
 }
 #outObservacao {
   font-family: var(--fonte);
-  font-size: 14px;
+  font-size: 15px;
   word-break: normal;
   color: var(--texto-2);
 }
@@ -638,7 +643,7 @@ label { font-size: 13px; font-weight: 500; color: var(--texto); }
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--azul);
   text-decoration: none;
 }
@@ -654,8 +659,8 @@ label { font-size: 13px; font-weight: 500; color: var(--texto); }
 .acesso-extra-titulo {
   margin: 0;
   padding: 12px 24px;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 700;
   color: var(--texto);
   background: var(--superficie-2);
 }
@@ -698,8 +703,8 @@ details.painel-admin > summary h2 {
 .badge {
   min-width: 22px;
   padding: 2px 8px;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
   text-align: center;
   color: #fff;
   background: var(--azul);
@@ -728,8 +733,8 @@ details.painel-admin > summary h2 {
   gap: 8px;
   padding: 6px 12px;
   font: inherit;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 400;
   color: var(--texto-2);
   background: transparent;
   border: 0;
@@ -745,7 +750,7 @@ details.painel-admin > summary h2 {
 .filtro-contador {
   min-width: 18px;
   padding: 0 6px;
-  font-size: 12px;
+  font-size: 13px;
   font-variant-numeric: tabular-nums;
   text-align: center;
   color: var(--texto-2);
@@ -779,11 +784,11 @@ details.painel-admin > summary h2 {
 .lista-usuarios .chamado-item { align-items: center; padding-top: 12px; padding-bottom: 12px; }
 
 .chamado-info { min-width: 0; flex: 1 1 320px; }
-.chamado-info p { margin: 0 0 4px; font-size: 14px; }
+.chamado-info p { margin: 0 0 4px; font-size: 15px; }
 .chamado-info p:last-child { margin-bottom: 0; }
 
-.chamado-diff { color: var(--texto); font-size: 13px !important; }
-.chamado-data { color: var(--texto-3); font-size: 12px !important; margin-top: 8px !important; }
+.chamado-diff { color: var(--texto); font-size: 14px !important; }
+.chamado-data { color: var(--texto-3); font-size: 13px !important; margin-top: 8px !important; }
 
 .chamado-acoes {
   display: flex;
@@ -797,8 +802,8 @@ details.painel-admin > summary h2 {
   display: inline-block;
   margin: 4px 6px 6px 0 !important;
   padding: 1px 8px;
-  font-size: 12px !important;
-  font-weight: 500;
+  font-size: 13px !important;
+  font-weight: 400;
   border-radius: 4px;
 }
 .chamado-tipo-selo.tipo-edicao        { background: var(--cinza-fundo); color: var(--cinza); }
@@ -806,16 +811,16 @@ details.painel-admin > summary h2 {
 .chamado-tipo-selo.tipo-novo_acesso   { background: var(--azul-claro);  color: var(--azul); }
 .chamado-acesso-titulo { background: transparent; color: var(--texto-2); border: 1px solid var(--borda); }
 
-.chamado-justificativa { color: var(--texto-2) !important; font-size: 13px !important; }
-.chamado-recusa        { color: var(--vermelho) !important; font-size: 13px !important; }
+.chamado-justificativa { color: var(--texto-2) !important; font-size: 14px !important; }
+.chamado-recusa        { color: var(--vermelho) !important; font-size: 14px !important; }
 
 .status-badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 3px 10px 3px 8px;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
   border-radius: 999px;
   white-space: nowrap;
 }
@@ -830,7 +835,7 @@ details.painel-admin > summary h2 {
 .status-badge.status-concluido { background: var(--verde-fundo); color: var(--verde); }
 .status-badge.status-recusado  { background: var(--cinza-fundo); color: var(--cinza); }
 
-.select-tipo-usuario { width: auto; min-height: 34px; font-size: 13px; }
+.select-tipo-usuario { width: auto; min-height: 34px; font-size: 14px; }
 
 /* =================================================================
    MODAIS
@@ -896,7 +901,7 @@ details.painel-admin > summary h2 {
   margin-bottom: 8px;
   cursor: pointer;
 }
-.valor-atual { font-weight: 400; font-size: 12px; color: var(--texto-3); }
+.valor-atual { font-weight: 400; font-size: 13px; color: var(--texto-3); }
 
 .modal-botoes,
 .caixa-botoes-linha {
@@ -952,13 +957,13 @@ details.painel-admin > summary h2 {
   align-items: center;
   margin-bottom: 8px;
 }
-.acesso-extra-linha input { min-height: 36px; padding: 7px 10px; font-size: 13px; }
+.acesso-extra-linha input { min-height: 36px; padding: 7px 10px; font-size: 14px; }
 
 /* Revisão de chamado */
 .aviso-revisao {
   margin: 0 0 18px;
   padding: 12px 14px;
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.55;
   color: var(--texto);
   background: var(--azul-claro);
@@ -975,7 +980,7 @@ details.painel-admin > summary h2 {
 .campo-alterando label::after {
   content: " · pedido no chamado";
   font-weight: 400;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--ambar);
 }
 
@@ -983,7 +988,7 @@ details.painel-admin > summary h2 {
 .cad-deteccao {
   margin: -4px 0 16px;
   padding: 10px 12px;
-  font-size: 13px;
+  font-size: 14px;
   border-radius: var(--raio-p);
   border: 1px solid transparent;
 }
@@ -1001,7 +1006,7 @@ details.painel-admin > summary h2 {
   z-index: 60;
   max-width: 340px;
   padding: 12px 16px;
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.45;
   color: #fff;
   background: var(--tinta);

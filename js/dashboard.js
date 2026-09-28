@@ -536,6 +536,10 @@ function carregarConvenios(empresa) {
 
 async function selecionarConvenio(c) {
   convenioAtual = c;
+  // A empresa vem do próprio convênio. Antes ela só era escrita ao trocar
+  // o select de empresa; depois de voltar para "Selecione o convênio"
+  // (que limpa a ficha inteira), escolher outro convênio deixava "—".
+  document.getElementById("outEmpresa").textContent = c.empresa;
   document.getElementById("outConvenio").textContent = c.convenio;
   atualizarExibicaoConvenio(c);
   document.getElementById("btnChamado").disabled = false;

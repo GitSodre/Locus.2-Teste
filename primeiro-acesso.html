@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Primeiro acesso - Locus</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body class="login-page">
+  <aside class="auth-marca">
+    <span class="logo">Locus<span class="logo-ponto">.</span></span>
+    <div class="auth-marca-texto">
+      <p class="auth-titulo">Os acessos dos convênios, num lugar só.</p>
+      <p>Links, logins e senhas dos portais de cada empresa, mantidos pela equipe e sempre na versão mais recente.</p>
+    </div>
+    <p class="auth-rodape">Uso interno</p>
+  </aside>
+
+  <main class="auth-form">
+    <div class="login-card">
+      <h1>Crie sua senha</h1>
+      <p class="instrucao">É seu primeiro acesso. Escolha uma senha de 6 números para usar daqui em diante.</p>
+
+      <label class="campo-pin-label" for="pin1">Nova senha</label>
+      <input type="password" id="pin1" class="campo-pin" placeholder="••••••"
+             inputmode="numeric" maxlength="6" autocomplete="new-password" />
+
+      <label class="campo-pin-label" for="pin2">Confirme a senha</label>
+      <input type="password" id="pin2" class="campo-pin" placeholder="••••••"
+             inputmode="numeric" maxlength="6" autocomplete="new-password" />
+
+      <button id="btnDefinir" type="button" class="btn-primario">Definir senha</button>
+      <p id="msg" class="msg-feedback" role="status" aria-live="polite"></p>
+
+      <!-- Botão (e não link) porque precisa encerrar a sessão temporária
+           antes de sair; o visual é o mesmo do link-secundario. -->
+      <button id="btnVoltarLogin" type="button" class="link-secundario">Voltar para o login</button>
+    </div>
+  </main>
+
+  <script src="js/lib/supabase-2.116.0.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/primeiro-acesso.js"></script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Entrar - Locus</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body class="login-page">
+  <aside class="auth-marca">
+    <span class="logo">Locus<span class="logo-ponto">.</span></span>
+    <div class="auth-marca-texto">
+      <p class="auth-titulo">Os acessos dos convênios, num lugar só.</p>
+      <p>Links, logins e senhas dos portais de cada empresa, mantidos pela equipe e sempre na versão mais recente.</p>
+    </div>
+    <p class="auth-rodape">Uso interno</p>
+  </aside>
+
+  <main class="auth-form">
+    <div class="login-card">
+      <h1>Entrar</h1>
+      <p class="instrucao">Use o email e a senha de 6 dígitos cadastrados no Locus.</p>
+
+      <label for="login">Email</label>
+      <input type="email" id="login" placeholder="nome@empresa.com.br" autocomplete="username" />
+
+      <label for="senha">Senha</label>
+      <div class="senha-wrapper">
+        <input type="password" id="senha" placeholder="Sua senha" autocomplete="current-password" />
+        <button type="button" id="toggleSenha" class="olho" aria-label="Mostrar senha" aria-pressed="false">
+            <svg class="icone-aberto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg class="icone-fechado" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.4 10.4 0 0 1 12 5c6.5 0 10 7 10 7a17.6 17.6 0 0 1-3.2 4.1M6.6 6.6C3.8 8.4 2 12 2 12s3.5 7 10 7a9.9 9.9 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>
+          </button>
+      </div>
+
+      <button id="btnEntrar" type="button" class="btn-primario">Entrar</button>
+      <p id="msg" class="msg-feedback erro" role="alert" aria-live="assertive"></p>
+
+      <a href="recuperar-senha.html" class="link-secundario">Esqueci minha senha</a>
+    </div>
+  </main>
+
+  <script src="js/lib/supabase-2.116.0.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/login.js"></script>
+</body>
+</html>

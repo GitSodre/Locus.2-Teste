@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Locus</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="dashboard-page">
+
+  <!-- ============================================================
+       SIDEBAR — atalhos que rolam até cada seção da página.
+       Os itens de Chamados e Usuários acompanham a visibilidade dos
+       painéis (quem controla isso continua sendo o dashboard.js;
+       o layout.js só espelha).
+  ============================================================= -->
+  <aside class="sidebar">
+    <a href="#secaoConvenios" class="logo" aria-label="Locus, início">Locus<span class="logo-ponto">.</span></a>
+
+    <nav class="sidebar-nav" aria-label="Seções">
+      <a href="#secaoConvenios" class="nav-item ativo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Convênios
+      </a>
+      <a href="#painelChamados" id="navChamados" class="nav-item" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H8l-4 4z"/><path d="M8 9h8M8 12h5"/></svg>
+        <span id="navChamadosTexto">Chamados</span>
+        <span id="navBadgeChamados" class="nav-badge" hidden></span>
+      </a>
+      <a href="#painelUsuarios" id="navUsuarios" class="nav-item" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18.5 20a6.5 6.5 0 0 0-3-5.5"/></svg>
+        Usuários
+      </a>
+    </nav>
+
+    <div class="sidebar-usuario">
+      <span id="avatarUsuario" class="avatar" aria-hidden="true"></span>
+      <div class="sidebar-usuario-texto">
+        <span id="usuarioLogado" class="usuario-logado"></span>
+        <span id="papelUsuario" class="usuario-papel"></span>
+      </div>
+      <button type="button" class="btn-sair" onclick="logout()">Sair</button>
+    </div>
+  </aside>
+
+  <main class="dashboard-container">
+
+    <!-- ============================================================
+         CONVÊNIOS
+    ============================================================= -->
+    <section id="secaoConvenios" class="secao" aria-labelledby="tituloConvenios">
+      <header class="secao-cabecalho">
+        <div>
+          <h1 id="tituloConvenios" class="secao-titulo">Convênios</h1>
+          <p id="cadastroDica" class="painel-aviso cadastro-dica">
+            Tem um login de convênio que ainda não está no Locus? Envie para aprovação.
+          </p>
+        </div>
+        <div class="caixa-cadastro-usuario">
+          <button id="btnCadastrarAcesso" type="button" class="btn-verde btn-small">
+            + Solicitar cadastro de convênio
+          </button>
+        </div>
+      </header>
+
+      <div class="filtros-linha">
+        <div class="filtro">
+          <label for="selectEmpresa">Empresa</label>
+          <select id="selectEmpresa">
+            <option value="">Selecione a empresa</option>
+          </select>
+        </div>
+
+        <div class="filtro">
+          <label for="selectConvenio">Convênio</label>
+          <select id="selectConvenio" disabled>
+            <option value="">Selecione o convênio</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- A classe sem-selecao (posta pelo layout.js) mostra o estado vazio -->
+      <div id="dadosConvenio" class="dados-convenio sem-selecao">
+        <div class="vazio-msg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <p>Escolha a empresa e o convênio para ver o link, o login e a senha de acesso.</p>
+        </div>
+
+        <div class="convenio-cabecalho">
+          <div>
+            <p class="convenio-empresa"><span id="outEmpresa">—</span></p>
+            <h2 id="outConvenio" class="convenio-nome">—</h2>
+          </div>
+          <button id="btnChamado" type="button" class="btn-cinza btn-small" disabled>
+            Solicitar alteração de acesso
+          </button>
+        </div>
+
+        <div class="acesso-extra-card acesso-principal">
+          <!-- Só aparece quando o acesso principal tiver um rótulo definido -->
+          <p id="outRotuloPrincipal" class="acesso-extra-titulo" hidden>—</p>
+
+          <p>
+            <strong>Link</strong>
+            <a id="outLink" target="_blank" rel="noopener noreferrer">—</a>
+            <button type="button" class="btn-copy" id="copyLink" aria-label="Copiar link" title="Copiar link" hidden><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-copy" aria-hidden="true"><path d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5A3.375 3.375 0 0 0 6.375 7.5H5.25m11.9-3.664A2.251 2.251 0 0 0 15 2.25h-1.5a2.251 2.251 0 0 0-2.15 1.586m5.8 0c.065.21.1.433.1.664v.75h-6V4.5c0-.231.035-.454.1-.664M6.75 7.5H4.875c-.621 0-1.125.504-1.125 1.125v12c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V16.5a9 9 0 0 0-9-9Z"/></svg></button>
+          </p>
+
+          <p>
+            <strong>Login</strong>
+            <span id="outLogin">—</span>
+            <button type="button" class="btn-copy" id="copyLogin" aria-label="Copiar login" title="Copiar login" hidden><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-copy" aria-hidden="true"><path d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5A3.375 3.375 0 0 0 6.375 7.5H5.25m11.9-3.664A2.251 2.251 0 0 0 15 2.25h-1.5a2.251 2.251 0 0 0-2.15 1.586m5.8 0c.065.21.1.433.1.664v.75h-6V4.5c0-.231.035-.454.1-.664M6.75 7.5H4.875c-.621 0-1.125.504-1.125 1.125v12c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V16.5a9 9 0 0 0-9-9Z"/></svg></button>
+          </p>
+
+          <p>
+            <strong>Senha</strong>
+            <span id="outSenha">—</span>
+            <button type="button" class="btn-copy" id="copySenha" aria-label="Copiar senha" title="Copiar senha" hidden><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-copy" aria-hidden="true"><path d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 0 0-3.375-3.375h-1.5a1.125 1.125 0 0 1-1.125-1.125v-1.5A3.375 3.375 0 0 0 6.375 7.5H5.25m11.9-3.664A2.251 2.251 0 0 0 15 2.25h-1.5a2.251 2.251 0 0 0-2.15 1.586m5.8 0c.065.21.1.433.1.664v.75h-6V4.5c0-.231.035-.454.1-.664M6.75 7.5H4.875c-.621 0-1.125.504-1.125 1.125v12c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V16.5a9 9 0 0 0-9-9Z"/></svg></button>
+          </p>
+
+          <p><strong>Observação</strong> <span id="outObservacao">—</span></p>
+        </div>
+      </div>
+
+      <!-- Só aparece quando o convênio tiver acessos extras cadastrados -->
+      <div id="outrosAcessos" class="outros-acessos" hidden>
+        <h3 class="outros-titulo">Outros acessos deste convênio</h3>
+        <div id="listaOutrosAcessos"></div>
+      </div>
+    </section>
+
+    <!-- ============================================================
+         CHAMADOS DE ALTERAÇÃO (recolhível)
+         Admin  : vê todos os chamados e pode atender.
+         Usuário: vê somente os chamados abertos por ele.
+    ============================================================= -->
+    <details id="painelChamados" class="painel-admin secao" hidden>
+      <summary>
+        <h2><span id="tituloChamados">Chamados de alteração</span> <span id="badgeChamados" class="badge" hidden>0</span></h2>
+      </summary>
+
+      <div class="painel-corpo">
+        <div id="filtrosChamados" class="filtros-chamados" role="group" aria-label="Filtrar chamados por status">
+          <button type="button" class="filtro-chamado filtro-aberto ativo" data-filtro="aberto" aria-pressed="true">
+            Em aberto <span class="filtro-contador" data-contador="aberto">0</span>
+          </button>
+          <button type="button" class="filtro-chamado filtro-concluido" data-filtro="concluido" aria-pressed="false">
+            Concluídos <span class="filtro-contador" data-contador="concluido">0</span>
+          </button>
+          <button type="button" class="filtro-chamado filtro-recusado" data-filtro="recusado" aria-pressed="false">
+            Rejeitados <span class="filtro-contador" data-contador="recusado">0</span>
+          </button>
+          <button type="button" class="filtro-chamado filtro-todos" data-filtro="todos" aria-pressed="false">
+            Todos <span class="filtro-contador" data-contador="todos">0</span>
+          </button>
+        </div>
+
+        <div id="listaChamados" class="lista-chamados">
+          <p class="painel-aviso">Carregando chamados...</p>
+        </div>
+      </div>
+    </details>
+
+    <!-- ============================================================
+         GERENCIAR USUÁRIOS (recolhível) — só admin
+    ============================================================= -->
+    <details id="painelUsuarios" class="painel-admin secao" hidden>
+      <summary>
+        <h2>Usuários</h2>
+      </summary>
+
+      <div class="painel-corpo">
+        <p class="painel-aviso">
+          Admin acessa os painéis administrativos; Usuário consulta os convênios e abre chamados.
+        </p>
+        <div id="listaUsuarios" class="lista-usuarios">
+          <p class="painel-aviso">Carregando usuários...</p>
+        </div>
+      </div>
+    </details>
+
+  </main>
+
+  <!-- ============================================================
+       MODAL — SOLICITAR ALTERAÇÃO DE ACESSO (usuários normais)
+  ============================================================= -->
+  <div id="modalChamado" class="modal-overlay" hidden>
+    <div class="modal-card">
+      <h2>Solicitar alteração de acesso</h2>
+      <p class="painel-aviso">
+        Empresa: <strong id="modalEmpresa">—</strong><br>
+        Convênio: <strong id="modalConvenio">—</strong><br>
+        <span id="modalAcessoTitulo">Acesso principal</span>
+      </p>
+      <p class="painel-aviso">
+        Marque somente os campos que deseja alterar. O que ficar desmarcado continua com o valor atual.
+      </p>
+
+      <div class="modal-campo">
+        <label class="checkbox-label">
+          <input type="checkbox" id="chkAlterarLogin">
+          Alterar login <span class="valor-atual">(atual: <span id="modalLoginAtual">—</span>)</span>
+        </label>
+        <input type="text" id="modalNovoLogin" placeholder="Novo login" disabled>
+      </div>
+
+      <div class="modal-campo">
+        <label class="checkbox-label">
+          <input type="checkbox" id="chkAlterarSenha">
+          Alterar senha <span class="valor-atual">(atual: <span id="modalSenhaAtual">—</span>)</span>
+        </label>
+        <input type="text" id="modalNovaSenha" placeholder="Nova senha" disabled>
+      </div>
+
+      <div class="modal-campo">
+        <label class="checkbox-label">
+          <input type="checkbox" id="chkAlterarLink">
+          Alterar link <span class="valor-atual">(atual: <span id="modalLinkAtual">—</span>)</span>
+        </label>
+        <input type="text" id="modalNovoLink" placeholder="Novo link" disabled>
+      </div>
+
+      <!-- Cancelar aqui só fecha a janela: ação neutra, botão cinza.
+           O vermelho fica reservado para o Excluir convênio. -->
+      <div class="modal-botoes">
+        <button id="btnCancelarChamado" class="btn-cinza">Cancelar</button>
+        <button id="btnConfirmarChamado" class="btn-verde">Enviar solicitação</button>
+      </div>
+      <p id="msgModalChamado" class="msg-feedback"></p>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       MODAL — CADASTRAR ACESSO EXISTENTE (usuários normais)
+  ============================================================= -->
+  <div id="modalCadastro" class="modal-overlay" hidden>
+    <div class="modal-card modal-card-xl">
+      <div class="modal-header">
+        <h2>Cadastrar dados do convênio</h2>
+        <button type="button" id="btnFecharModalCadastro" class="modal-fechar" aria-label="Fechar">&times;</button>
+      </div>
+      <p class="painel-aviso">
+        Preencha os dados do acesso. A solicitação passa
+        pela aprovação de um administrador antes de entrar no sistema.
+      </p>
+
+      <div class="modal-form-grid">
+      <div class="modal-campo">
+        <label for="cadEmpresa">Empresa <span class="obrigatorio">*</span></label>
+        <select id="cadEmpresa">
+          <option value="">Selecione a empresa</option>
+          <option value="CLÍNICA">CLÍNICA</option>
+          <option value="HA">HA</option>
+          <option value="CTS">CTS</option>
+          <option value="CTN">CTN</option>
+        </select>
+      </div>
+
+      <div class="modal-campo">
+        <label for="cadConvenio">Convênio <span class="obrigatorio">*</span></label>
+        <input type="text" id="cadConvenio" class="campo-maiusculo"
+               placeholder="NOME DO CONVÊNIO" autocomplete="off">
+      </div>
+
+      <!-- Preenchido por JS: diz se será convênio novo ou acesso adicional -->
+      <p id="cadDeteccao" class="cad-deteccao modal-campo-full" hidden></p>
+
+      <div class="modal-campo modal-campo-full">
+        <label for="cadRotulo">Rótulo deste acesso</label>
+        <input type="text" id="cadRotulo"
+               placeholder="Ex: Portal principal, Portal financeiro...">
+      </div>
+
+      <div class="modal-campo">
+        <label for="cadLink">Link</label>
+        <input type="text" id="cadLink" placeholder="https://...">
+      </div>
+
+      <div class="modal-campo">
+        <label for="cadLogin">Login</label>
+        <input type="text" id="cadLogin" placeholder="Login de acesso">
+      </div>
+
+      <div class="modal-campo">
+        <label for="cadSenha">Senha</label>
+        <input type="text" id="cadSenha" placeholder="Senha de acesso">
+      </div>
+
+      <div class="modal-campo modal-campo-full">
+        <label for="cadObservacao">Observação</label>
+        <textarea id="cadObservacao" rows="2"
+                  placeholder="Algo que ajude quem for usar esse acesso"></textarea>
+      </div>
+
+      <div class="modal-campo modal-campo-full">
+        <label for="cadJustificativa">Justificativa <span class="obrigatorio">*</span></label>
+        <textarea id="cadJustificativa" rows="2"
+                  placeholder="De onde veio esse acesso e por que ele deve entrar no sistema"></textarea>
+      </div>
+
+      </div><!-- /.modal-form-grid -->
+
+      <!-- Cancelar aqui só fecha a janela: ação neutra, botão cinza. -->
+      <div class="modal-botoes">
+        <button id="btnCancelarCadastro" class="btn-cinza">Cancelar</button>
+        <button id="btnConfirmarCadastro" class="btn-verde">Enviar para aprovação</button>
+      </div>
+      <p id="msgModalCadastro" class="msg-feedback"></p>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       MODAL — EDITAR CONVÊNIO (somente admin)
+       Mesmo conteúdo do antigo "Painel Admin — Editar convênio".
+       Abre pelo botão que o usuário comum vê como
+       "Solicitar alteração de acesso".
+  ============================================================= -->
+  <div id="modalEdicao" class="modal-overlay" hidden>
+    <div class="modal-card modal-card-xl">
+      <div class="modal-header">
+        <h2>Editar convênio</h2>
+        <button type="button" id="btnFecharModalEdicao" class="modal-fechar" aria-label="Fechar">&times;</button>
+      </div>
+
+      <p class="painel-aviso">Altere o que for preciso e clique em "Salvar alterações". Fechar esta janela descarta o que não foi salvo.</p>
+
+      <!-- Aviso mostrado quando o formulário foi preenchido a partir de um chamado -->
+      <p id="avisoRevisao" class="aviso-revisao" hidden>
+        Revisando solicitação de <strong id="avisoRevisaoNome"></strong> —
+        alterando: <strong id="avisoRevisaoCampos"></strong>.
+        Os campos em laranja abaixo são os que essa solicitação quer mudar.
+        Ao clicar em "Salvar alterações", o chamado será marcado como concluído automaticamente.
+        <button type="button" id="btnCancelarRevisao" class="link-cancelar">cancelar revisão</button>
+      </p>
+
+      <div class="form-grid">
+        <div class="campo">
+          <label for="editEmpresa">Empresa</label>
+          <select id="editEmpresa" disabled>
+            <option value="">Selecione a empresa</option>
+            <option value="CLÍNICA">CLÍNICA</option>
+            <option value="HA">HA</option>
+            <option value="CTS">CTS</option>
+            <option value="CTN">CTN</option>
+          </select>
+        </div>
+
+        <div class="campo">
+          <label for="editConvenioNome">Convênio</label>
+          <input type="text" id="editConvenioNome" placeholder="Nome do convênio" disabled>
+        </div>
+
+        <div class="campo campo-full">
+          <label for="editRotulo">Rótulo deste acesso (opcional)</label>
+          <input type="text" id="editRotulo" placeholder="Ex: Portal principal, Acesso web..." disabled>
+        </div>
+
+        <div class="campo">
+          <label for="editLink">Link</label>
+          <input type="text" id="editLink" placeholder="https://..." disabled>
+        </div>
+
+        <div class="campo">
+          <label for="editLogin">Login</label>
+          <input type="text" id="editLogin" placeholder="Login de acesso" disabled>
+        </div>
+
+        <div class="campo">
+          <label for="editSenha">Senha</label>
+          <input type="text" id="editSenha" placeholder="Senha de acesso" disabled>
+        </div>
+
+        <div class="campo campo-full">
+          <label for="editObservacao">Observação</label>
+          <textarea id="editObservacao" rows="3" placeholder="Observações" disabled></textarea>
+        </div>
+      </div>
+
+      <!-- Acessos adicionais (opcional) — só para convênios que têm mais de 1 link/login/senha -->
+      <div class="subsecao-acessos">
+        <div class="subsecao-header">
+          <h3>Acessos adicionais (opcional)</h3>
+          <button type="button" id="btnAddAcesso" class="btn-verde btn-small" disabled>+ Adicionar acesso</button>
+        </div>
+        <p class="painel-aviso">Use isto apenas quando o convênio realmente tiver mais de um link/login/senha. Linhas em branco não são salvas.</p>
+        <div id="listaAcessosExtra"></div>
+      </div>
+
+      <div class="caixa_botoes caixa-botoes-linha">
+        <button id="btnSalvarConvenio" class="btn-verde" disabled>Salvar alterações</button>
+        <button id="btnCancelarEdicao" class="btn-cinza" disabled>Cancelar alterações</button>
+        <button id="btnExcluirConvenio" class="btn-vermelho" disabled>Excluir convênio</button>
+      </div>
+      <p id="msgSalvarConvenio" class="msg-feedback"></p>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       MODAL — CRIAR NOVO CONVÊNIO (somente admin)
+       Mesmo conteúdo do antigo "Painel Admin — Criar novo convênio".
+       Abre pelo botão que o usuário comum vê como
+       "+ Solicitar cadastro de convênio".
+  ============================================================= -->
+  <div id="modalNovoConvenio" class="modal-overlay" hidden>
+    <div class="modal-card modal-card-xl">
+      <div class="modal-header">
+        <h2>Criar novo convênio</h2>
+        <button type="button" id="btnFecharModalNovoConvenio" class="modal-fechar" aria-label="Fechar">&times;</button>
+      </div>
+
+      <p class="painel-aviso">Preencha os dados do convênio. Empresa e Convênio são obrigatórios.</p>
+
+      <div class="form-grid">
+        <div class="campo">
+          <label for="novoEmpresa">Empresa</label>
+          <select id="novoEmpresa" disabled>
+            <option value="">Selecione a empresa</option>
+            <option value="CLÍNICA">CLÍNICA</option>
+            <option value="HA">HA</option>
+            <option value="CTS">CTS</option>
+            <option value="CTN">CTN</option>
+          </select>
+        </div>
+
+        <div class="campo">
+          <label for="novoConvenioNome">Convênio</label>
+          <input type="text" id="novoConvenioNome" placeholder="Nome do convênio" disabled>
+        </div>
+
+        <div class="campo campo-full">
+          <label for="novoRotulo">Rótulo deste acesso (opcional)</label>
+          <input type="text" id="novoRotulo" placeholder="Ex: Portal principal, Acesso web..." disabled>
+        </div>
+
+        <div class="campo">
+          <label for="novoLink">Link</label>
+          <input type="text" id="novoLink" placeholder="https://..." disabled>
+        </div>
+
+        <div class="campo">
+          <label for="novoLogin">Login</label>
+          <input type="text" id="novoLogin" placeholder="Login de acesso" disabled>
+        </div>
+
+        <div class="campo">
+          <label for="novoSenha">Senha</label>
+          <input type="text" id="novoSenha" placeholder="Senha de acesso" disabled>
+        </div>
+
+        <div class="campo campo-full">
+          <label for="novoObservacao">Observação</label>
+          <textarea id="novoObservacao" rows="3" placeholder="Observações" disabled></textarea>
+        </div>
+      </div>
+
+      <!-- Acessos adicionais já na criação, para não precisar criar o
+           convênio e abrir a edição em seguida só para acrescentá-los -->
+      <div class="subsecao-acessos">
+        <div class="subsecao-header">
+          <h3>Acessos adicionais (opcional)</h3>
+          <button type="button" id="btnAddAcessoNovo" class="btn-verde btn-small" disabled>+ Adicionar acesso</button>
+        </div>
+        <p class="painel-aviso">Use isto apenas quando o convênio realmente tiver mais de um link/login/senha. Linhas em branco não são salvas.</p>
+        <div id="listaAcessosNovo"></div>
+      </div>
+
+      <!-- Cancelar criação só fecha a janela: mesmo cinza do
+           "Cancelar alterações" do modal de edição. -->
+      <div class="caixa_botoes caixa-botoes-linha">
+        <button id="btnCriarConvenio" class="btn-verde">Criar convênio</button>
+        <button id="btnCancelarNovoConvenio" class="btn-cinza">Cancelar criação</button>
+      </div>
+      <p id="msgCriarConvenio" class="msg-feedback"></p>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       AVISO DISCRETO DE ATUALIZAÇÃO EM TEMPO REAL
+       Aparece no canto da tela quando outra pessoa altera algo
+       enquanto você está editando. Não bloqueia nem rouba o foco.
+  ============================================================= -->
+  <div id="avisoAtualizacao" class="aviso-atualizacao" role="status" aria-live="polite" hidden></div>
+
+  <!-- LIBS -->
+  <script src="js/lib/supabase-2.116.0.js"></script>
+  <script src="js/supabase.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script src="js/layout.js"></script>
+
+</body>
+</html>

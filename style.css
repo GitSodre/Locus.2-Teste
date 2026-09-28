@@ -525,7 +525,6 @@ label { font-size: 13px; font-weight: 500; color: var(--texto); }
 }
 
 .secao { scroll-margin-top: 24px; }
-.secao + .secao { margin-top: 56px; }
 
 .secao-cabecalho {
   display: flex;
@@ -671,38 +670,29 @@ label { font-size: 13px; font-weight: 500; color: var(--texto); }
 /* =================================================================
    PAINÉIS RECOLHÍVEIS (Chamados / Usuários)
 ================================================================= */
+/* Cada item da sidebar mostra uma seção; as outras ficam ocultas.
+   (Classe própria, porque o atributo hidden é do dashboard.js.) */
+.secao-inativa { display: none !important; }
+
+/* Chamados e Usuários continuam sendo <details> no HTML (o JS usa os
+   IDs de dentro do summary), mas agora ficam sempre abertos e o
+   summary é só o título da tela. */
 details.painel-admin > summary {
   list-style: none;
-  cursor: pointer;
+  cursor: default;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 4px 0;
-  border-radius: var(--raio-p);
+  margin-bottom: 8px;
 }
 details.painel-admin > summary::-webkit-details-marker { display: none; }
-
 details.painel-admin > summary h2 {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  font-size: 20px;
+  font-size: 24px;
 }
-details.painel-admin > summary::before {
-  content: "";
-  flex: none;
-  width: 8px;
-  height: 8px;
-  margin: 0 4px 0 2px;
-  border-right: 2px solid var(--texto-2);
-  border-bottom: 2px solid var(--texto-2);
-  transform: rotate(-45deg);
-  transition: transform .15s ease;
-}
-details.painel-admin[open] > summary::before { transform: rotate(45deg); }
-details.painel-admin > summary:hover h2 { color: var(--azul); }
 
-.painel-corpo { padding-top: 16px; }
+.painel-corpo { padding-top: 8px; }
 .painel-corpo > .painel-aviso { margin-bottom: 16px; }
 
 .badge {

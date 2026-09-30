@@ -99,6 +99,7 @@ a { color: var(--azul); }
 input[type="text"],
 input[type="email"],
 input[type="password"],
+input[type="search"],
 select,
 textarea {
   width: 100%;
@@ -113,6 +114,8 @@ textarea {
   transition: border-color .15s ease, box-shadow .15s ease;
 }
 textarea { resize: vertical; line-height: 1.45; }
+input[type="search"] { -webkit-appearance: none; appearance: none; }
+input[type="search"]::-webkit-search-cancel-button { cursor: pointer; }
 
 input::placeholder, textarea::placeholder { color: var(--texto-3); }
 

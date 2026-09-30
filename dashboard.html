@@ -184,7 +184,7 @@
           <label class="eq-busca">
             <span class="visualmente-oculto">Buscar hospital</span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
-            <input type="text" id="eqBusca" placeholder="Buscar hospital…" autocomplete="off">
+            <input type="search" id="eqBusca" name="busca-hospital" placeholder="Buscar hospital…" autocomplete="off" spellcheck="false" data-1p-ignore data-lpignore="true">
           </label>
           <button type="button" id="eqBtnAusencia" class="btn-cinza" disabled>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
@@ -264,7 +264,7 @@
           <label class="eq-busca">
             <span class="visualmente-oculto">Buscar usuário</span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
-            <input type="search" id="buscaUsuarios" placeholder="Buscar usuário…" autocomplete="off">
+            <input type="search" id="buscaUsuarios" name="busca-usuarios" placeholder="Buscar usuário…" autocomplete="off" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true">
           </label>
           <span id="buscaUsuariosQtd" class="usuarios-busca-qtd" aria-live="polite"></span>
         </div>
@@ -616,14 +616,20 @@
         <button type="button" class="modal-fechar" data-fechar aria-label="Fechar">&times;</button>
       </div>
       <p class="painel-aviso">Digite sua senha de 6 números. A edição trava de novo após 5 minutos sem uso.</p>
-      <div class="modal-campo">
-        <label for="eqPin">Sua senha</label>
-        <input type="password" id="eqPin" class="eq-pin" inputmode="numeric" maxlength="6" autocomplete="current-password">
-      </div>
-      <div class="modal-botoes">
-        <button type="button" class="btn-cinza" data-fechar>Cancelar</button>
-        <button type="button" id="eqPinConfirmar" class="btn-primario">Destravar</button>
-      </div>
+      <!-- Form próprio com o email escondido: sem isso o gerenciador de
+           senhas do Chrome "adivinha" o campo de usuário e joga o email
+           em outro campo da página (ex.: a busca de usuários). -->
+      <form id="eqPinForm" class="eq-pin-form" novalidate>
+        <input type="email" id="eqPinUsuario" name="username" autocomplete="username" hidden tabindex="-1" aria-hidden="true">
+        <div class="modal-campo">
+          <label for="eqPin">Sua senha</label>
+          <input type="password" id="eqPin" name="password" class="eq-pin" inputmode="numeric" maxlength="6" autocomplete="current-password">
+        </div>
+        <div class="modal-botoes">
+          <button type="button" class="btn-cinza" data-fechar>Cancelar</button>
+          <button type="button" id="eqPinConfirmar" class="btn-primario">Destravar</button>
+        </div>
+      </form>
       <p id="eqPinMsg" class="msg-feedback erro" role="alert"></p>
     </div>
   </div>

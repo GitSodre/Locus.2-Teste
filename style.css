@@ -782,6 +782,11 @@ details.painel-admin > summary h2 {
 }
 .chamado-item + .chamado-item { border-top: 1px solid var(--borda); }
 .lista-usuarios .chamado-item { align-items: center; padding-top: 12px; padding-bottom: 12px; }
+.usuarios-busca { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.usuarios-busca-qtd { font-size: 14px; color: var(--texto-2); }
+.lista-usuarios .chamado-item[hidden] { display: none; }
+.lista-usuarios .chamado-item.primeiro-visivel { border-top: 0; }
+@media (max-width: 900px) { .usuarios-busca .eq-busca, .usuarios-busca .eq-busca input { width: 100%; } }
 .usuario-equipe { display: inline-flex; align-items: center; gap: 8px; margin: 0; font-size: 14px; font-weight: 400; white-space: nowrap; cursor: pointer; }
 .usuario-equipe input { width: 16px; height: 16px; margin: 0; accent-color: var(--azul); }
 .usuario-equipe:has(input:disabled) { opacity: .6; cursor: progress; }

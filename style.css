@@ -782,6 +782,9 @@ details.painel-admin > summary h2 {
 }
 .chamado-item + .chamado-item { border-top: 1px solid var(--borda); }
 .lista-usuarios .chamado-item { align-items: center; padding-top: 12px; padding-bottom: 12px; }
+.usuario-equipe { display: inline-flex; align-items: center; gap: 8px; margin: 0; font-size: 14px; font-weight: 400; white-space: nowrap; cursor: pointer; }
+.usuario-equipe input { width: 16px; height: 16px; margin: 0; accent-color: var(--azul); }
+.usuario-equipe:has(input:disabled) { opacity: .6; cursor: progress; }
 
 .chamado-info { min-width: 0; flex: 1 1 320px; }
 .chamado-info p { margin: 0 0 4px; font-size: 15px; }
@@ -1256,6 +1259,17 @@ hr { border: 0; border-top: 1px solid var(--borda); margin: 24px 0; }
 .eq-col-sem-recolhida .eq-sem-rotulo { flex: none; overflow: visible; writing-mode: vertical-rl; transform: rotate(180deg); }
 .eq-col.eq-alvo { border-color: var(--azul); box-shadow: 0 0 0 4px rgba(47, 84, 214, 0.14); }
 .eq-col-apagada { opacity: .55; }
+.eq-col-fora-equipe { border-style: dashed; }
+.eq-selo-fora-equipe {
+  align-self: flex-start;
+  padding: 1px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--texto-2);
+  background: var(--superficie-2);
+  border: 1px solid var(--borda-forte);
+  border-radius: 999px;
+}
 
 .eq-col-cab {
   display: flex;

@@ -1220,6 +1220,39 @@ hr { border: 0; border-top: 1px solid var(--borda); margin: 24px 0; }
   height: calc(100dvh - 290px);
   min-height: 420px;
 }
+
+/* Pré-faturamento (admin) no computador: em vez de adivinhar a altura
+   do cabeçalho, a tela vira uma coluna flex da altura da janela e o
+   quadro ocupa exatamente o que sobra. Assim a página não ganha barra
+   de rolagem vertical; ela só aparece se a janela for baixa demais
+   para o quadro mínimo (360px). As colunas continuam rolando por dentro. */
+@media (min-width: 901px) {
+  .dashboard-container:has(#painelEquipe:not(.secao-inativa):not([hidden]) #eqAdmin:not([hidden])) {
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 24px;
+  }
+  .dashboard-container:has(#eqAdmin:not([hidden])) #painelEquipe:not(.secao-inativa) {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  #eqAdmin:not([hidden]) {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  #eqAdmin .eq-quadro {
+    flex: 1;
+    height: auto;
+    min-height: 360px;
+  }
+  #eqAdmin .eq-filtros, #eqAdmin .eq-faixa { flex: none; }
+}
 .eq-colunas {
   flex: 1;
   min-width: 0;

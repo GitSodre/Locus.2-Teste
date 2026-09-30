@@ -33,7 +33,7 @@
       </a>
       <a href="#painelEquipe" id="navEquipe" class="nav-item" hidden>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><circle cx="12" cy="11" r="2.5"/><path d="M8 17.5a4 4 0 0 1 8 0"/></svg>
-        <span id="navEquipeTexto">Equipe</span>
+        <span id="navEquipeTexto">Pré-faturamento</span>
       </a>
       <a href="#painelUsuarios" id="navUsuarios" class="nav-item" hidden>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18.5 20a6.5 6.5 0 0 0-3-5.5"/></svg>
@@ -170,14 +170,15 @@
     </details>
 
     <!-- ============================================================
-         EQUIPE — quem responde por cada hospital (js/equipe.js)
+         PRÉ-FATURAMENTO — quem responde por cada hospital (js/equipe.js)
+         Os ids e arquivos continuam "equipe"/"eq" por compatibilidade.
          Admin  : quadro com uma coluna por pessoa, arrastar e soltar.
          Usuário: só os hospitais dele.
     ============================================================= -->
     <section id="painelEquipe" class="secao secao-inativa" aria-labelledby="tituloEquipe" hidden>
       <header class="secao-cabecalho">
         <div>
-          <h1 id="tituloEquipe" class="secao-titulo">Equipe</h1>
+          <h1 id="tituloEquipe" class="secao-titulo">Pré-faturamento</h1>
           <p id="eqSubtitulo" class="painel-aviso"></p>
         </div>
         <div id="eqAcoesAdmin" class="eq-acoes" hidden>
@@ -212,11 +213,17 @@
               Pessoas · <span id="eqPessoasQtd">0</span>
             </summary>
             <div class="eq-pessoas-menu">
+              <label class="eq-busca eq-pessoas-busca">
+                <span class="visualmente-oculto">Buscar pessoa</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
+                <input type="search" id="eqPessoasBusca" name="busca-pessoa" placeholder="Buscar pessoa…" autocomplete="off" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true">
+              </label>
               <div class="eq-pessoas-atalhos">
                 <button type="button" id="eqPessoasTodas" class="eq-link">Marcar todas</button>
                 <button type="button" id="eqPessoasNenhuma" class="eq-link">Desmarcar todas</button>
               </div>
               <div id="eqPessoasLista" class="eq-pessoas-lista" role="group" aria-label="Pessoas visíveis no quadro"></div>
+              <p id="eqPessoasVazio" class="eq-pessoas-vazio" hidden>Ninguém com esse nome.</p>
             </div>
           </details>
         </div>
@@ -258,7 +265,7 @@
 
       <div class="painel-corpo">
         <p class="painel-aviso">
-          Admin acessa os painéis administrativos; Usuário consulta os convênios e abre chamados. Marque “Na Equipe” para quem responde por hospitais: só essas pessoas ganham coluna na aba Equipe.
+          Admin acessa os painéis administrativos; Usuário consulta os convênios e abre chamados. Marque “Pré-faturamento” para quem responde por hospitais: só essas pessoas ganham coluna na aba Pré-faturamento.
         </p>
         <div class="usuarios-busca">
           <label class="eq-busca">
@@ -570,7 +577,7 @@
   </div>
 
   <!-- ============================================================
-       MODAIS DA EQUIPE (js/equipe.js)
+       MODAIS DO PRÉ-FATURAMENTO (js/equipe.js)
   ============================================================= -->
   <div id="eqModalMover" class="modal-overlay eq-modal" hidden>
     <div class="modal-card modal-card-largo" role="dialog" aria-modal="true" aria-labelledby="eqMoverTitulo">

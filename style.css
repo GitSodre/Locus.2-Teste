@@ -1111,6 +1111,42 @@ hr { border: 0; border-top: 1px solid var(--borda); margin: 24px 0; }
 .eq-filtro:hover { border-color: var(--texto-3); }
 .eq-filtro[aria-pressed="true"] { background: var(--tinta); border-color: var(--tinta); color: #fff; font-weight: 700; }
 
+/* Seletor de pessoas visíveis */
+.eq-pessoas { position: relative; margin-left: auto; }
+.eq-pessoas-botao { display: inline-flex; align-items: center; gap: 6px; list-style: none; user-select: none; }
+.eq-pessoas-botao::-webkit-details-marker { display: none; }
+.eq-pessoas-botao svg { width: 16px; height: 16px; flex: none; }
+.eq-pessoas.eq-pessoas-ativo .eq-pessoas-botao { color: var(--azul); border-color: var(--azul); font-weight: 700; }
+.eq-pessoas-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 30;
+  width: 260px;
+  max-width: calc(100vw - 32px);
+  padding: 8px;
+  background: var(--superficie);
+  border: 1px solid var(--borda-forte);
+  border-radius: var(--raio-m);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+}
+.eq-pessoas-atalhos { display: flex; justify-content: space-between; padding: 0 2px 6px; border-bottom: 1px solid var(--borda); }
+.eq-pessoas-lista { max-height: 320px; overflow-y: auto; padding-top: 4px; }
+.eq-pessoa-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 6px;
+  font-size: 14px;
+  font-weight: 400;
+  border-radius: var(--raio-p);
+  cursor: pointer;
+}
+.eq-pessoa-item:hover { background: var(--superficie-2); }
+.eq-pessoa-item input { flex: none; width: 16px; height: 16px; margin: 0; accent-color: var(--azul); }
+.eq-pessoa-nome { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.eq-pessoa-qtd { font-size: 13px; font-weight: 700; color: var(--cinza); }
+
 /* Faixa de destinos (recolhível) */
 .eq-faixa {
   margin-bottom: 12px;
@@ -1159,6 +1195,7 @@ hr { border: 0; border-top: 1px solid var(--borda); margin: 24px 0; }
 .eq-chip-qtd { font-weight: 700; color: var(--cinza); }
 .eq-chip.eq-alvo { color: #fff; background: var(--azul); border-color: var(--azul); box-shadow: 0 0 0 4px rgba(47, 84, 214, 0.2); }
 .eq-chip.eq-alvo .eq-chip-qtd { color: #fff; }
+.eq-chip.eq-chip-oculto { border-style: dashed; color: var(--texto-2); }
 
 /* Quadro: "Sem responsável" fixa à esquerda, pessoas rolam para o lado */
 .eq-quadro {
@@ -1189,7 +1226,34 @@ hr { border: 0; border-top: 1px solid var(--borda); margin: 24px 0; }
   border-radius: var(--raio-m);
   transition: border-color .12s ease, box-shadow .12s ease;
 }
-.eq-col-sem { width: 280px; background: var(--superficie-2); border: 1.5px dashed var(--texto-3); }
+.eq-col-sem { width: 280px; background: var(--superficie-2); border: 1.5px dashed var(--texto-3); transition: width .18s ease, border-color .12s ease, box-shadow .12s ease; }
+
+/* Cabeçalho do "Sem responsável" é um botão que recolhe a coluna para o lado */
+.eq-sem-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  background: none;
+  border: 0;
+  border-radius: var(--raio-p);
+  cursor: pointer;
+}
+.eq-sem-toggle .eq-icone svg { width: 16px; height: 16px; transition: transform .15s ease; }
+.eq-sem-rotulo { flex: 1; min-width: 0; font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.eq-qtd-achou { color: #fff; background: var(--azul); }
+
+.eq-col-sem-recolhida { width: 52px; }
+.eq-col-sem-recolhida .eq-col-cab { flex: 1; padding: 10px 0; border-bottom: 0; }
+.eq-col-sem-recolhida .eq-sem-toggle { height: 100%; flex-direction: column; justify-content: flex-start; gap: 12px; }
+.eq-col-sem-recolhida .eq-sem-toggle .eq-icone { order: -2; }
+.eq-col-sem-recolhida .eq-sem-toggle .eq-icone svg { transform: rotate(180deg); }
+.eq-col-sem-recolhida .eq-sem-toggle .eq-qtd { order: -1; }
+.eq-col-sem-recolhida .eq-sem-rotulo { flex: none; overflow: visible; writing-mode: vertical-rl; transform: rotate(180deg); }
 .eq-col.eq-alvo { border-color: var(--azul); box-shadow: 0 0 0 4px rgba(47, 84, 214, 0.14); }
 .eq-col-apagada { opacity: .55; }
 
@@ -1282,6 +1346,7 @@ hr { border: 0; border-top: 1px solid var(--borda); margin: 24px 0; }
   border-radius: 8px;
 }
 .eq-vazio-grande { min-height: 160px; font-size: 15px; background: var(--superficie); }
+.eq-vazio-colunas { flex: 1; min-height: 160px; font-size: 15px; }
 
 /* Cards de hospital */
 .eq-card {
@@ -1420,6 +1485,13 @@ hr { border: 0; border-top: 1px solid var(--borda); margin: 24px 0; }
   .eq-busca, .eq-busca input { width: 100%; }
   .eq-quadro { height: auto; flex-direction: column; }
   .eq-col-sem { width: auto; max-height: 360px; }
+  .eq-col-sem .eq-sem-toggle .eq-icone svg { transform: rotate(90deg); }
+  .eq-col-sem-recolhida { width: auto; }
+  .eq-col-sem-recolhida .eq-sem-toggle { flex-direction: row; }
+  .eq-col-sem-recolhida .eq-sem-rotulo { flex: 1; writing-mode: horizontal-tb; transform: none; }
+  .eq-col-sem-recolhida .eq-sem-toggle .eq-icone svg { transform: rotate(-90deg); }
+  .eq-pessoas { margin-left: 0; }
+  .eq-pessoas-menu { right: auto; left: 0; }
   .eq-colunas { min-height: 460px; }
 }
 

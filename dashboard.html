@@ -204,14 +204,29 @@
           <button type="button" class="eq-filtro" data-filtro="todos" aria-pressed="true">Todos · <span class="eq-filtro-qtd">0</span></button>
           <button type="button" class="eq-filtro" data-filtro="cobertura" aria-pressed="false">Em cobertura · <span class="eq-filtro-qtd">0</span></button>
           <button type="button" class="eq-filtro" data-filtro="sem" aria-pressed="false">Sem responsável · <span class="eq-filtro-qtd">0</span></button>
+
+          <!-- Quais colunas de pessoas aparecem (só muda a visualização) -->
+          <details id="eqPessoas" class="eq-pessoas">
+            <summary class="eq-filtro eq-pessoas-botao">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M21.5 20a6.5 6.5 0 0 0-4-6"/></svg>
+              Pessoas · <span id="eqPessoasQtd">0</span>
+            </summary>
+            <div class="eq-pessoas-menu">
+              <div class="eq-pessoas-atalhos">
+                <button type="button" id="eqPessoasTodas" class="eq-link">Marcar todas</button>
+                <button type="button" id="eqPessoasNenhuma" class="eq-link">Desmarcar todas</button>
+              </div>
+              <div id="eqPessoasLista" class="eq-pessoas-lista" role="group" aria-label="Pessoas visíveis no quadro"></div>
+            </div>
+          </details>
         </div>
 
-        <!-- Faixa de destinos: recolhida; abre sozinha enquanto arrasta -->
+        <!-- Faixa de destinos: recolhida; abre ao passar um card arrastado por cima dela -->
         <div class="eq-faixa">
           <button type="button" id="eqFaixaToggle" class="eq-faixa-toggle" aria-expanded="false" aria-controls="eqFaixaDestinos" aria-label="Abrir a faixa de destinos">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
             Soltar em uma pessoa
-            <span class="eq-faixa-dica">· abre sozinha ao arrastar</span>
+            <span class="eq-faixa-dica">· arraste um card até aqui para abrir</span>
           </button>
           <div id="eqFaixaDestinos" class="eq-faixa-destinos" hidden></div>
         </div>

@@ -2180,7 +2180,7 @@ async function carregarUsuarios() {
     return;
   }
 
-  // Quem participa da Equipe (tem coluna na aba Equipe). Se a coluna
+  // Quem participa do Pré-faturamento (tem coluna na aba). Se a coluna
   // participa_equipe ainda não existir no banco, a caixinha só não aparece.
   let participacao = null;
   const { data: part, error: errPart } = await supabaseClient
@@ -2238,13 +2238,13 @@ function renderizarUsuarios(usuarios, participacao) {
       if (participacao) {
         const rotulo = document.createElement("label");
         rotulo.className = "usuario-equipe";
-        rotulo.title = "Marcado: tem coluna na aba Equipe e pode receber hospitais";
+        rotulo.title = "Marcado: tem coluna na aba Pré-faturamento e pode receber hospitais";
         const chk = document.createElement("input");
         chk.type = "checkbox";
         chk.checked = participacao.get((u.email || "").toLowerCase()) !== false;
-        chk.setAttribute("aria-label", `${u.email} faz parte da Equipe`);
+        chk.setAttribute("aria-label", `${u.email} faz parte do Pré-faturamento`);
         chk.addEventListener("change", () => alterarParticipacaoEquipe(u.email, chk));
-        rotulo.append(chk, document.createTextNode("Na Equipe"));
+        rotulo.append(chk, document.createTextNode("Pré-faturamento"));
         acoes.appendChild(rotulo);
       }
 
@@ -2353,7 +2353,7 @@ async function alterarTipoUsuario(email, novoTipo) {
   await carregarUsuarios();
 }
 
-/* Entra / sai da Equipe (coluna na aba Equipe) via RPC restrita a admins */
+/* Entra / sai do Pré-faturamento (coluna na aba Pré-faturamento) via RPC restrita a admins */
 async function alterarParticipacaoEquipe(email, chk) {
   const participa = chk.checked;
 
@@ -2367,8 +2367,8 @@ async function alterarParticipacaoEquipe(email, chk) {
     if (count > 0) {
       const ok = confirm(
         `${email} ainda é responsável por ${count} ${count === 1 ? "hospital" : "hospitais"}.\n\n` +
-        "A coluna dela continua na Equipe, marcada como \"Fora da Equipe\", até você mover esses hospitais. " +
-        "Ela não recebe hospitais novos.\n\nTirar da Equipe mesmo assim?"
+        "A coluna dela continua no Pré-faturamento, marcada como \"Fora do Pré-faturamento\", até você mover esses hospitais. " +
+        "Ela não recebe hospitais novos.\n\nTirar do Pré-faturamento mesmo assim?"
       );
       if (!ok) { chk.checked = true; return; }
     }
@@ -2382,13 +2382,13 @@ async function alterarParticipacaoEquipe(email, chk) {
   chk.disabled = false;
 
   if (error) {
-    console.error("Erro ao alterar participação na Equipe:", error);
-    alert("Não foi possível alterar a participação desta pessoa na Equipe.");
+    console.error("Erro ao alterar participação no Pré-faturamento:", error);
+    alert("Não foi possível alterar a participação desta pessoa no Pré-faturamento.");
     chk.checked = !participa;
     return;
   }
 
-  // A aba Equipe recarrega para a coluna aparecer ou sumir
+  // A aba Pré-faturamento recarrega para a coluna aparecer ou sumir
   document.dispatchEvent(new CustomEvent("equipe:recarregar"));
 }
 

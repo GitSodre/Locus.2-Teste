@@ -16,9 +16,13 @@
  *  - A busca esconde as colunas sem nenhum hospital encontrado.
  *  - A faixa de destinos só abre ao arrastar um card por cima dela.
  *
+ * Na tela esta seção se chama "Pré-faturamento"; no código e no banco
+ * continua "equipe" (ids eq*, funções equipe_*) para não quebrar nada.
+ *
  * Quem tem coluna vem de usuarios.participa_equipe (marcado em Usuários).
- * Quem saiu da Equipe mas ainda tem hospital continua com coluna, marcada
- * "Fora da Equipe", até os hospitais serem movidos; não recebe hospital novo.
+ * Quem saiu do Pré-faturamento mas ainda tem hospital continua com coluna,
+ * marcada "Fora do Pré-faturamento", até os hospitais serem movidos; não
+ * recebe hospital novo.
  *
  * Nada aqui usa estilo inline nem HTML com dados do banco: os textos
  * entram sempre por textContent (a CSP do vercel.json bloqueia inline).
@@ -152,8 +156,8 @@
       if (!errEu && eu && eu.participa_equipe === false) return;
     }
 
-    $("navEquipeTexto").textContent = st.admin ? "Equipe" : "Meus hospitais";
-    $("tituloEquipe").textContent = st.admin ? "Equipe" : "Meus hospitais";
+    $("navEquipeTexto").textContent = st.admin ? "Pré-faturamento" : "Meus hospitais";
+    $("tituloEquipe").textContent = st.admin ? "Pré-faturamento" : "Meus hospitais";
     $("painelEquipe").hidden = false;
     $("navEquipe").hidden = false;
     st.pronto = true;
@@ -250,7 +254,7 @@
     const falha = res.find(r => r.error);
     if (falha) {
       console.error("Erro ao carregar a equipe:", falha.error);
-      $("eqMsg").textContent = "Não foi possível carregar a equipe. Tente recarregar a página.";
+      $("eqMsg").textContent = "Não foi possível carregar o Pré-faturamento. Tente recarregar a página.";
       return false;
     }
     $("eqMsg").textContent = "";
@@ -441,7 +445,7 @@
     cab.append(linha);
 
     if (foraDaEquipe) {
-      const selo = el("span", "eq-selo-fora-equipe", "Fora da Equipe");
+      const selo = el("span", "eq-selo-fora-equipe", "Fora do Pré-faturamento");
       selo.title = "Não recebe hospitais novos. Mova estes hospitais para outra pessoa.";
       cab.append(selo);
     }
@@ -536,10 +540,26 @@
   function prepararSeletorPessoas() {
     const caixa = $("eqPessoas");
 
-    $("eqPessoasTodas").addEventListener("click", () => { st.ocultas.clear(); renderAdmin(); });
-    $("eqPessoasNenhuma").addEventListener("click", () => {
-      st.pessoas.forEach(p => st.ocultas.add(p));
+    // Com busca, "Marcar/Desmarcar" vale só para quem apareceu na lista
+    const encontradas = () => Array.from($("eqPessoasLista").querySelectorAll(".eq-pessoa-item:not([hidden]) input[data-email]"))
+      .map(chk => chk.dataset.email);
+    $("eqPessoasTodas").addEventListener("click", () => {
+      encontradas().forEach(p => st.ocultas.delete(p));
       renderAdmin();
+    });
+    $("eqPessoasNenhuma").addEventListener("click", () => {
+      encontradas().forEach(p => st.ocultas.add(p));
+      renderAdmin();
+    });
+
+    const busca = $("eqPessoasBusca");
+    busca.addEventListener("input", filtrarListaPessoas);
+    busca.addEventListener("keydown", e => { if (e.key === "Enter") e.preventDefault(); });
+
+    // Ao abrir, o cursor já vai para a busca; ao fechar, a busca é limpa
+    caixa.addEventListener("toggle", () => {
+      if (caixa.open) busca.focus();
+      else if (busca.value) { busca.value = ""; filtrarListaPessoas(); }
     });
 
     $("eqPessoasLista").addEventListener("change", e => {
@@ -556,10 +576,27 @@
     });
     document.addEventListener("keydown", e => {
       if (e.key === "Escape" && caixa.open && !modalAberto()) {
+        // Primeiro Esc limpa a busca; o segundo fecha
+        if (busca.value) { busca.value = ""; filtrarListaPessoas(); return; }
         caixa.open = false;
         caixa.querySelector("summary").focus();
       }
     });
+  }
+
+  // Busca dentro do dropdown "Pessoas": só esconde itens da lista
+  function filtrarListaPessoas() {
+    const termo = norm($("eqPessoasBusca").value);
+    let achou = 0;
+    $("eqPessoasLista").querySelectorAll(".eq-pessoa-item").forEach(item => {
+      const mostra = !termo || item.dataset.busca.includes(termo);
+      item.hidden = !mostra;
+      if (mostra) achou++;
+    });
+    $("eqPessoasVazio").hidden = !termo || achou > 0;
+    $("eqPessoasTodas").textContent = termo ? "Marcar encontradas" : "Marcar todas";
+    $("eqPessoasNenhuma").textContent = termo ? "Desmarcar encontradas" : "Desmarcar todas";
+    $("eqPessoasTodas").disabled = $("eqPessoasNenhuma").disabled = termo && !achou;
   }
 
   function atualizarSeletorPessoas(infos) {
@@ -576,12 +613,14 @@
         chk.type = "checkbox";
         chk.dataset.email = p;
         const nome = el("span", "eq-pessoa-nome", curto(p));
-        nome.title = st.foraEquipe.has(p) ? p + " (fora da Equipe)" : p;
+        nome.title = st.foraEquipe.has(p) ? p + " (fora do Pré-faturamento)" : p;
         const qtd = el("span", "eq-pessoa-qtd");
         qtd.dataset.email = p;
+        item.dataset.busca = norm(p + " " + curto(p));
         item.append(chk, nome, qtd);
         lista.append(item);
       });
+      filtrarListaPessoas();
     }
 
     lista.querySelectorAll("input[data-email]").forEach(chk => {

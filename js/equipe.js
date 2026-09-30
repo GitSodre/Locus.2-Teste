@@ -1137,7 +1137,10 @@
 
     // Destravar
     $("eqPin").addEventListener("input", e => { e.target.value = e.target.value.replace(/\D/g, "").slice(0, 6); });
-    $("eqPin").addEventListener("keydown", e => { if (e.key === "Enter") confirmarDestravar(); });
+    $("eqPin").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); confirmarDestravar(); } });
+    // O form existe só para o Chrome entender o par email/senha; nunca envia
+    $("eqPinForm").addEventListener("submit", e => e.preventDefault());
+    $("eqPinUsuario").value = st.email || "";
     $("eqPinConfirmar").addEventListener("click", confirmarDestravar);
 
     // Ausência

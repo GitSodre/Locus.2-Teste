@@ -2299,6 +2299,18 @@ function filtrarUsuarios() {
 function prepararBuscaUsuarios() {
   const campo = document.getElementById("buscaUsuarios");
   if (!campo) return;
+
+  // Garantia extra contra preenchimento automático do navegador: a busca
+  // sempre começa vazia (inclusive ao voltar pelo histórico).
+  const limparSeNaoDigitou = () => {
+    if (document.activeElement !== campo && campo.value) {
+      campo.value = "";
+      filtrarUsuarios();
+    }
+  };
+  limparSeNaoDigitou();
+  window.addEventListener("load", () => setTimeout(limparSeNaoDigitou, 300));
+  window.addEventListener("pageshow", limparSeNaoDigitou);
   campo.addEventListener("input", filtrarUsuarios);
   // Esc limpa a busca
   campo.addEventListener("keydown", e => {

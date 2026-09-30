@@ -10,6 +10,12 @@
  * filtrada por RLS e toda alteração passa por funções que conferem se
  * quem chamou é admin. O cadeado daqui só evita arrastes acidentais.
  *
+ * Só visualização (não mexe no banco):
+ *  - "Pessoas" escolhe quais colunas aparecem; começa com todas marcadas.
+ *  - "Sem responsável" começa recolhida na lateral e abre no clique.
+ *  - A busca esconde as colunas sem nenhum hospital encontrado.
+ *  - A faixa de destinos só abre ao arrastar um card por cima dela.
+ *
  * Nada aqui usa estilo inline nem HTML com dados do banco: os textos
  * entram sempre por textContent (a CSP do vercel.json bloqueia inline).
  */
@@ -24,7 +30,8 @@
   const ICONES = {
     busca: '<path d="M20 20l-4.2-4.2"/><circle cx="11" cy="11" r="6.5"/>',
     seta: '<path d="M5 12h14M13 6l6 6-6 6"/>',
-    volta: '<path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-2"/>'
+    volta: '<path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-2"/>',
+    recolher: '<path d="M15 6l-6 6 6 6"/>'
   };
 
   const st = {
@@ -44,6 +51,9 @@
     timerTrava: null,
     arrastando: null,        // ids sendo arrastados
     faixaAutoAberta: false,
+    semAberta: false,        // "Sem responsável" começa recolhida na lateral
+    ocultas: new Set(),      // pessoas desmarcadas em "Pessoas" (só visualização)
+    chavePessoas: "",        // evita remontar a lista de pessoas sem necessidade
     acao: null,              // o que o modal aberto vai confirmar
     ultimaCarga: 0,
     carregando: false,
@@ -156,11 +166,22 @@
 
     if (!st.admin) return;
 
-    $("eqBusca").addEventListener("input", e => { st.busca = norm(e.target.value); renderAdmin(); });
-
-    document.querySelectorAll(".eq-filtro").forEach(b => {
-      b.addEventListener("click", () => { st.filtro = b.dataset.filtro; renderAdmin(); });
+    $("eqBusca").addEventListener("input", e => {
+      st.busca = norm(e.target.value);
+      renderAdmin();
+      // As colunas que sobraram vêm para a frente: volta a rolagem para o início
+      $("eqColunas").scrollLeft = 0;
     });
+
+    document.querySelectorAll(".eq-filtro[data-filtro]").forEach(b => {
+      b.addEventListener("click", () => {
+        st.filtro = b.dataset.filtro;
+        if (st.filtro === "sem") st.semAberta = true; // senão o filtro mostraria uma coluna fechada
+        renderAdmin();
+      });
+    });
+
+    prepararSeletorPessoas();
 
     $("eqFaixaToggle").addEventListener("click", () => {
       st.faixaAutoAberta = false;
@@ -277,28 +298,45 @@
       cobertura: infos.filter(i => i.cob).length,
       sem: infos.filter(i => !i.dono).length
     };
-    document.querySelectorAll(".eq-filtro").forEach(b => {
+    document.querySelectorAll(".eq-filtro[data-filtro]").forEach(b => {
       b.setAttribute("aria-pressed", String(b.dataset.filtro === st.filtro));
       b.querySelector(".eq-filtro-qtd").textContent = cont[b.dataset.filtro];
     });
 
     // Sem responsável (fixa à esquerda)
+    // Sem responsável: fixa à esquerda, recolhível para a lateral.
+    // Mesmo recolhida continua aceitando cards soltos (data-destino="").
     const semCol = $("eqSemResp");
     semCol.replaceChildren();
+    semCol.classList.toggle("eq-col-sem-recolhida", !st.semAberta);
     const sem = infos.filter(i => !i.dono);
-    const cabSem = el("div", "eq-col-cab");
-    const linhaSem = el("div", "eq-col-cab-linha");
-    linhaSem.append(el("h2", "eq-col-nome", "Sem responsável"), el("span", "eq-qtd eq-qtd-alerta", sem.length));
-    cabSem.append(linhaSem);
-    const corpoSem = el("div", "eq-col-corpo");
     const semVisiveis = sem.filter(visivel);
-    semVisiveis.forEach(i => corpoSem.append(card(i, "sem")));
-    if (!semVisiveis.length) {
-      corpoSem.append(el("p", "eq-vazio", sem.length
-        ? "Nenhum hospital com este filtro."
-        : "Hospitais novos entram aqui. Arraste para uma pessoa para atribuir."));
+
+    // Com busca, o número mostra quantos foram encontrados ali
+    const qtdSem = el("span", "eq-qtd eq-qtd-alerta", st.busca ? semVisiveis.length : sem.length);
+    if (st.busca && semVisiveis.length) qtdSem.classList.add("eq-qtd-achou");
+
+    const tglSem = el("button", "eq-sem-toggle");
+    tglSem.type = "button";
+    tglSem.setAttribute("aria-expanded", String(st.semAberta));
+    tglSem.title = st.semAberta ? "Recolher para a lateral" : "Mostrar os hospitais sem responsável";
+    tglSem.append(icone("recolher"), el("span", "eq-sem-rotulo", "Sem responsável"), qtdSem);
+    tglSem.addEventListener("click", () => { st.semAberta = !st.semAberta; renderAdmin(); });
+
+    const cabSem = el("div", "eq-col-cab");
+    cabSem.append(tglSem);
+    semCol.append(cabSem);
+
+    if (st.semAberta) {
+      const corpoSem = el("div", "eq-col-corpo");
+      semVisiveis.forEach(i => corpoSem.append(card(i, "sem")));
+      if (!semVisiveis.length) {
+        corpoSem.append(el("p", "eq-vazio", sem.length
+          ? "Nenhum hospital com este filtro."
+          : "Hospitais novos entram aqui. Arraste para uma pessoa para atribuir."));
+      }
+      semCol.append(corpoSem);
     }
-    semCol.append(cabSem, corpoSem);
 
     // Uma coluna por pessoa
     const colunas = $("eqColunas");
@@ -307,15 +345,28 @@
     const chips = $("eqFaixaDestinos");
     chips.replaceChildren();
 
+    let mostradas = 0;
     for (const p of st.pessoas) {
       const fixos = infos.filter(i => i.dono === p && !i.cob);
       const fora = infos.filter(i => i.dono === p && i.cob);
       const cobrindo = infos.filter(i => i.cob && i.cob.para_email === p);
-      colunas.append(coluna(p, fixos, fora, cobrindo));
 
+      // Coluna aparece se a pessoa está marcada e, com busca, se tem algum hospital encontrado
+      const oculta = st.ocultas.has(p);
+      const achou = !st.busca || [...fixos, ...fora, ...cobrindo].some(visivel);
+      if (!oculta && achou) {
+        colunas.append(coluna(p, fixos, fora, cobrindo));
+        mostradas++;
+      }
+
+      // Os chips continuam todos: dá para mandar hospital para quem está com a coluna oculta
       const chip = el("button", "eq-chip");
       chip.type = "button";
       chip.dataset.destino = p;
+      if (oculta) {
+        chip.classList.add("eq-chip-oculto");
+        chip.title = "Coluna oculta em Pessoas";
+      }
       chip.append(el("span", null, curto(p)), el("span", "eq-chip-qtd", fixos.length + fora.length));
       chip.addEventListener("click", () => {
         if (st.selecionados.size) pedirMovimento([...st.selecionados], p);
@@ -323,8 +374,17 @@
       });
       chips.append(chip);
     }
+    if (!mostradas) {
+      let txt = "Nenhuma pessoa para mostrar.";
+      if (st.busca) txt = semVisiveis.length
+        ? "Nenhuma coluna tem esse hospital. Ele está em Sem responsável."
+        : "Nenhum hospital encontrado com essa busca.";
+      else if (st.pessoas.length && st.ocultas.size) txt = "Todas as pessoas estão desmarcadas em Pessoas.";
+      colunas.append(el("p", "eq-vazio eq-vazio-colunas", txt));
+    }
     colunas.scrollLeft = rolagem;
 
+    atualizarSeletorPessoas(infos);
     atualizarCadeado();
     atualizarBarraSelecao();
   }
@@ -438,6 +498,70 @@
     return c;
   }
 
+  /* ---------- Pessoas visíveis (só visualização) ---------- */
+  function prepararSeletorPessoas() {
+    const caixa = $("eqPessoas");
+
+    $("eqPessoasTodas").addEventListener("click", () => { st.ocultas.clear(); renderAdmin(); });
+    $("eqPessoasNenhuma").addEventListener("click", () => {
+      st.pessoas.forEach(p => st.ocultas.add(p));
+      renderAdmin();
+    });
+
+    $("eqPessoasLista").addEventListener("change", e => {
+      const chk = e.target.closest("input[data-email]");
+      if (!chk) return;
+      if (chk.checked) st.ocultas.delete(chk.dataset.email);
+      else st.ocultas.add(chk.dataset.email);
+      renderAdmin();
+    });
+
+    // Fecha ao clicar fora ou com Esc
+    document.addEventListener("click", e => {
+      if (caixa.open && !caixa.contains(e.target)) caixa.open = false;
+    });
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape" && caixa.open && !modalAberto()) {
+        caixa.open = false;
+        caixa.querySelector("summary").focus();
+      }
+    });
+  }
+
+  function atualizarSeletorPessoas(infos) {
+    const lista = $("eqPessoasLista");
+
+    // Só remonta quando muda quem está na equipe (não perde o foco ao marcar)
+    const chave = st.pessoas.join("|");
+    if (chave !== st.chavePessoas) {
+      st.chavePessoas = chave;
+      lista.replaceChildren();
+      st.pessoas.forEach(p => {
+        const item = el("label", "eq-pessoa-item");
+        const chk = el("input");
+        chk.type = "checkbox";
+        chk.dataset.email = p;
+        const nome = el("span", "eq-pessoa-nome", curto(p));
+        nome.title = p;
+        const qtd = el("span", "eq-pessoa-qtd");
+        qtd.dataset.email = p;
+        item.append(chk, nome, qtd);
+        lista.append(item);
+      });
+    }
+
+    lista.querySelectorAll("input[data-email]").forEach(chk => {
+      chk.checked = !st.ocultas.has(chk.dataset.email);
+    });
+    lista.querySelectorAll(".eq-pessoa-qtd").forEach(q => {
+      q.textContent = infos.filter(i => i.dono === q.dataset.email).length;
+    });
+
+    const vis = st.pessoas.filter(p => !st.ocultas.has(p)).length;
+    $("eqPessoasQtd").textContent = vis === st.pessoas.length ? "todas" : `${vis} de ${st.pessoas.length}`;
+    $("eqPessoas").classList.toggle("eq-pessoas-ativo", vis !== st.pessoas.length);
+  }
+
   function atualizarBarraSelecao() {
     const barra = $("eqBarraSelecao");
     const n = st.selecionados.size;
@@ -486,11 +610,14 @@
         document.body.classList.add("eq-arrastando");
         ids.forEach(i => document.querySelectorAll(`.eq-card[data-id="${i}"]`)
           .forEach(x => x.classList.add("eq-sendo-arrastado")));
-        if ($("eqFaixaDestinos").hidden) {
-          st.faixaAutoAberta = true;
-          abrirFaixa(true);
-        }
       }, 0);
+    });
+
+    // A faixa de destinos só abre quando o card arrastado passa por cima dela
+    document.querySelector(".eq-faixa").addEventListener("dragenter", () => {
+      if (!st.arrastando || !$("eqFaixaDestinos").hidden) return;
+      st.faixaAutoAberta = true;
+      abrirFaixa(true);
     });
 
     document.addEventListener("dragend", () => {

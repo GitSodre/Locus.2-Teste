@@ -2180,10 +2180,22 @@ async function carregarUsuarios() {
     return;
   }
 
-  renderizarUsuarios(data || []);
+  // Quem participa da Equipe (tem coluna na aba Equipe). Se a coluna
+  // participa_equipe ainda não existir no banco, a caixinha só não aparece.
+  let participacao = null;
+  const { data: part, error: errPart } = await supabaseClient
+    .from("usuarios")
+    .select("email,participa_equipe");
+  if (errPart) {
+    console.warn("Participação na Equipe indisponível (rode sql/equipe-participacao.sql):", errPart.message);
+  } else {
+    participacao = new Map((part || []).map(u => [(u.email || "").toLowerCase(), u.participa_equipe !== false]));
+  }
+
+  renderizarUsuarios(data || [], participacao);
 }
 
-function renderizarUsuarios(usuarios) {
+function renderizarUsuarios(usuarios, participacao) {
   const lista = document.getElementById("listaUsuarios");
   if (!lista) return;
 
@@ -2221,6 +2233,20 @@ function renderizarUsuarios(usuarios) {
         select.appendChild(opt);
       });
       select.addEventListener("change", () => alterarTipoUsuario(u.email, select.value));
+
+      if (participacao) {
+        const rotulo = document.createElement("label");
+        rotulo.className = "usuario-equipe";
+        rotulo.title = "Marcado: tem coluna na aba Equipe e pode receber hospitais";
+        const chk = document.createElement("input");
+        chk.type = "checkbox";
+        chk.checked = participacao.get((u.email || "").toLowerCase()) !== false;
+        chk.setAttribute("aria-label", `${u.email} faz parte da Equipe`);
+        chk.addEventListener("change", () => alterarParticipacaoEquipe(u.email, chk));
+        rotulo.append(chk, document.createTextNode("Na Equipe"));
+        acoes.appendChild(rotulo);
+      }
+
       acoes.appendChild(select);
 
       item.appendChild(info);
@@ -2258,6 +2284,45 @@ async function alterarTipoUsuario(email, novoTipo) {
   }
 
   await carregarUsuarios();
+}
+
+/* Entra / sai da Equipe (coluna na aba Equipe) via RPC restrita a admins */
+async function alterarParticipacaoEquipe(email, chk) {
+  const participa = chk.checked;
+
+  if (!participa) {
+    // Avisa se a pessoa ainda responde por algum hospital
+    const { count } = await supabaseClient
+      .from("hospital_responsavel")
+      .select("hospital_id", { count: "exact", head: true })
+      .eq("responsavel_email", (email || "").toLowerCase());
+
+    if (count > 0) {
+      const ok = confirm(
+        `${email} ainda é responsável por ${count} ${count === 1 ? "hospital" : "hospitais"}.\n\n` +
+        "A coluna dela continua na Equipe, marcada como \"Fora da Equipe\", até você mover esses hospitais. " +
+        "Ela não recebe hospitais novos.\n\nTirar da Equipe mesmo assim?"
+      );
+      if (!ok) { chk.checked = true; return; }
+    }
+  }
+
+  chk.disabled = true;
+  const { error } = await supabaseClient.rpc("equipe_definir_participacao", {
+    p_email: email,
+    p_participa: participa
+  });
+  chk.disabled = false;
+
+  if (error) {
+    console.error("Erro ao alterar participação na Equipe:", error);
+    alert("Não foi possível alterar a participação desta pessoa na Equipe.");
+    chk.checked = !participa;
+    return;
+  }
+
+  // A aba Equipe recarrega para a coluna aparecer ou sumir
+  document.dispatchEvent(new CustomEvent("equipe:recarregar"));
 }
 
 /* ================= LIMPEZA ================= */

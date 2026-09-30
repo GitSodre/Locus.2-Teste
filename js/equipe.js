@@ -16,6 +16,10 @@
  *  - A busca esconde as colunas sem nenhum hospital encontrado.
  *  - A faixa de destinos só abre ao arrastar um card por cima dela.
  *
+ * Quem tem coluna vem de usuarios.participa_equipe (marcado em Usuários).
+ * Quem saiu da Equipe mas ainda tem hospital continua com coluna, marcada
+ * "Fora da Equipe", até os hospitais serem movidos; não recebe hospital novo.
+ *
  * Nada aqui usa estilo inline nem HTML com dados do banco: os textos
  * entram sempre por textContent (a CSP do vercel.json bloqueia inline).
  */
@@ -41,7 +45,8 @@
     hospitais: [],           // [{id, nome}]
     donos: new Map(),        // hospital_id -> email do responsável fixo
     coberturas: [],          // em andamento ou agendadas
-    pessoas: [],             // emails (só admin)
+    pessoas: [],             // emails com coluna (só admin)
+    foraEquipe: new Set(),   // têm coluna só porque ainda têm hospital
     porId: new Map(),        // hospital_id -> dados montados
     selecionados: new Set(),
     busca: "",
@@ -139,6 +144,14 @@
     const ok = await carregar();
     if (!ok) return;
 
+    // Usuário que não faz parte da Equipe e não tem hospital nenhum:
+    // a aba "Meus hospitais" não faz sentido para ele e fica escondida.
+    if (!st.admin && !st.porId.size && !st.coberturas.length) {
+      const { data: eu, error: errEu } = await supabaseClient
+        .from("usuarios").select("participa_equipe").limit(1).maybeSingle();
+      if (!errEu && eu && eu.participa_equipe === false) return;
+    }
+
     $("navEquipeTexto").textContent = st.admin ? "Equipe" : "Meus hospitais";
     $("tituloEquipe").textContent = st.admin ? "Equipe" : "Meus hospitais";
     $("painelEquipe").hidden = false;
@@ -162,6 +175,8 @@
       if (Date.now() - st.ultimaCarga > RECARGA_MIN_MS) carregar();
     };
     window.addEventListener("focus", talvezRecarregar);
+    // O painel Usuários avisa quando alguém entra ou sai da Equipe
+    document.addEventListener("equipe:recarregar", () => { if (st.pronto) carregar(); });
     document.addEventListener("visibilitychange", talvezRecarregar);
 
     if (!st.admin) return;
@@ -247,10 +262,14 @@
     }));
 
     if (st.admin) {
-      const pessoas = new Set((res[3].data || []).map(p => (p.email || "").toLowerCase()).filter(Boolean));
-      // Quem é dono de hospital mas saiu da lista de usuários continua com coluna,
-      // senão os hospitais dele sumiriam da tela.
+      // Só quem participa da Equipe (usuarios.participa_equipe)
+      const equipe = new Set((res[3].data || []).map(p => (p.email || "").toLowerCase()).filter(Boolean));
+      const pessoas = new Set(equipe);
+      // Quem saiu da Equipe (ou do Locus) mas ainda é dono de hospital ou está
+      // cobrindo um agora continua com coluna, senão esses hospitais sumiriam.
       st.donos.forEach(email => pessoas.add(email));
+      st.coberturas.forEach(c => { if (c.inicio <= st.hoje) pessoas.add(c.para_email); });
+      st.foraEquipe = new Set([...pessoas].filter(p => !equipe.has(p)));
       st.pessoas = [...pessoas].sort();
     }
 
@@ -272,6 +291,11 @@
     }
     // Seleção de hospitais que não existem mais
     st.selecionados.forEach(id => { if (!st.porId.has(id)) st.selecionados.delete(id); });
+  }
+
+  // Quem pode receber hospital (o banco recusa quem está fora da Equipe)
+  function destinos() {
+    return st.pessoas.filter(p => !st.foraEquipe.has(p));
   }
 
   function render() {
@@ -359,7 +383,9 @@
         mostradas++;
       }
 
-      // Os chips continuam todos: dá para mandar hospital para quem está com a coluna oculta
+      // Os chips continuam todos: dá para mandar hospital para quem está com a coluna oculta.
+      // Quem está fora da Equipe não recebe hospital, então não vira chip.
+      if (st.foraEquipe.has(p)) continue;
       const chip = el("button", "eq-chip");
       chip.type = "button";
       chip.dataset.destino = p;
@@ -392,7 +418,9 @@
   function coluna(p, fixos, fora, cobrindo) {
     const col = el("section", "eq-col");
     col.id = "eqCol-" + curto(p);
-    col.dataset.destino = p;
+    const foraDaEquipe = st.foraEquipe.has(p);
+    if (!foraDaEquipe) col.dataset.destino = p; // fora da Equipe: não aceita soltar
+    else col.classList.add("eq-col-fora-equipe");
     col.setAttribute("aria-label", curto(p));
     if (fora.length) col.classList.add("eq-col-ausente");
 
@@ -411,6 +439,12 @@
       linha.append(extra);
     }
     cab.append(linha);
+
+    if (foraDaEquipe) {
+      const selo = el("span", "eq-selo-fora-equipe", "Fora da Equipe");
+      selo.title = "Não recebe hospitais novos. Mova estes hospitais para outra pessoa.";
+      cab.append(selo);
+    }
 
     if (fora.length) {
       const volta = fora.reduce((m, i) => (i.cob.fim > m ? i.cob.fim : m), "");
@@ -532,7 +566,7 @@
     const lista = $("eqPessoasLista");
 
     // Só remonta quando muda quem está na equipe (não perde o foco ao marcar)
-    const chave = st.pessoas.join("|");
+    const chave = st.pessoas.join("|") + "#" + [...st.foraEquipe].join("|");
     if (chave !== st.chavePessoas) {
       st.chavePessoas = chave;
       lista.replaceChildren();
@@ -542,7 +576,7 @@
         chk.type = "checkbox";
         chk.dataset.email = p;
         const nome = el("span", "eq-pessoa-nome", curto(p));
-        nome.title = p;
+        nome.title = st.foraEquipe.has(p) ? p + " (fora da Equipe)" : p;
         const qtd = el("span", "eq-pessoa-qtd");
         qtd.dataset.email = p;
         item.append(chk, nome, qtd);
@@ -571,7 +605,7 @@
     $("eqSelTexto").textContent = plural(n, "selecionado", "selecionados");
     const sel = $("eqSelDestino");
     sel.replaceChildren(new Option("Mover para…", ""), new Option("Sem responsável", "__sem__"));
-    st.pessoas.forEach(p => sel.append(new Option(curto(p), p)));
+    destinos().forEach(p => sel.append(new Option(curto(p), p)));
   }
 
   function abrirFaixa(abrir) {
@@ -813,7 +847,7 @@
 
   function opcoesCobertura(select, exceto, vazio) {
     select.replaceChildren(new Option(vazio, ""));
-    st.pessoas.filter(p => p !== exceto).forEach(p => select.append(new Option(curto(p), p)));
+    destinos().filter(p => p !== exceto).forEach(p => select.append(new Option(curto(p), p)));
   }
 
   function montarAusencia() {

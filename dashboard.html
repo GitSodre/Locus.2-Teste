@@ -31,6 +31,10 @@
         <span id="navChamadosTexto">Chamados</span>
         <span id="navBadgeChamados" class="nav-badge" hidden></span>
       </a>
+      <a href="#painelEquipe" id="navEquipe" class="nav-item" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><circle cx="12" cy="11" r="2.5"/><path d="M8 17.5a4 4 0 0 1 8 0"/></svg>
+        <span id="navEquipeTexto">Equipe</span>
+      </a>
       <a href="#painelUsuarios" id="navUsuarios" class="nav-item" hidden>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18.5 20a6.5 6.5 0 0 0-3-5.5"/></svg>
         Usuários
@@ -164,6 +168,70 @@
         </div>
       </div>
     </details>
+
+    <!-- ============================================================
+         EQUIPE — quem responde por cada hospital (js/equipe.js)
+         Admin  : quadro com uma coluna por pessoa, arrastar e soltar.
+         Usuário: só os hospitais dele.
+    ============================================================= -->
+    <section id="painelEquipe" class="secao secao-inativa" aria-labelledby="tituloEquipe" hidden>
+      <header class="secao-cabecalho">
+        <div>
+          <h1 id="tituloEquipe" class="secao-titulo">Equipe</h1>
+          <p id="eqSubtitulo" class="painel-aviso"></p>
+        </div>
+        <div id="eqAcoesAdmin" class="eq-acoes" hidden>
+          <label class="eq-busca">
+            <span class="visualmente-oculto">Buscar hospital</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
+            <input type="text" id="eqBusca" placeholder="Buscar hospital…" autocomplete="off">
+          </label>
+          <button type="button" id="eqBtnAusencia" class="btn-cinza" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
+            Registrar ausência
+          </button>
+          <button type="button" id="eqCadeado" class="btn-cinza eq-cadeado" aria-pressed="false">
+            <svg class="ic-fechado" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+            <svg class="ic-aberto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.6-1.8"/></svg>
+            <span id="eqCadeadoTexto">Edição travada</span>
+            <span id="eqCadeadoResto" class="eq-cadeado-resto" hidden></span>
+          </button>
+        </div>
+      </header>
+
+      <div id="eqAdmin" hidden>
+        <div class="eq-filtros" role="group" aria-label="Filtrar hospitais">
+          <button type="button" class="eq-filtro" data-filtro="todos" aria-pressed="true">Todos · <span class="eq-filtro-qtd">0</span></button>
+          <button type="button" class="eq-filtro" data-filtro="cobertura" aria-pressed="false">Em cobertura · <span class="eq-filtro-qtd">0</span></button>
+          <button type="button" class="eq-filtro" data-filtro="sem" aria-pressed="false">Sem responsável · <span class="eq-filtro-qtd">0</span></button>
+        </div>
+
+        <!-- Faixa de destinos: recolhida; abre sozinha enquanto arrasta -->
+        <div class="eq-faixa">
+          <button type="button" id="eqFaixaToggle" class="eq-faixa-toggle" aria-expanded="false" aria-controls="eqFaixaDestinos" aria-label="Abrir a faixa de destinos">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+            Soltar em uma pessoa
+            <span class="eq-faixa-dica">· abre sozinha ao arrastar</span>
+          </button>
+          <div id="eqFaixaDestinos" class="eq-faixa-destinos" hidden></div>
+        </div>
+
+        <div class="eq-quadro">
+          <section id="eqSemResp" class="eq-col eq-col-sem" data-destino="" aria-label="Sem responsável"></section>
+          <div id="eqColunas" class="eq-colunas"></div>
+        </div>
+
+        <div id="eqBarraSelecao" class="eq-barra-selecao" hidden>
+          <span id="eqSelTexto"></span>
+          <label class="visualmente-oculto" for="eqSelDestino">Mover selecionados para</label>
+          <select id="eqSelDestino"></select>
+          <button type="button" id="eqSelLimpar" class="btn-cinza btn-small">Limpar seleção</button>
+        </div>
+      </div>
+
+      <div id="eqUsuario" class="eq-usuario" hidden></div>
+      <p id="eqMsg" class="msg-feedback erro" role="alert"></p>
+    </section>
 
     <!-- ============================================================
          GERENCIAR USUÁRIOS (recolhível) — só admin
@@ -479,6 +547,117 @@
   </div>
 
   <!-- ============================================================
+       MODAIS DA EQUIPE (js/equipe.js)
+  ============================================================= -->
+  <div id="eqModalMover" class="modal-overlay eq-modal" hidden>
+    <div class="modal-card modal-card-largo" role="dialog" aria-modal="true" aria-labelledby="eqMoverTitulo">
+      <div class="modal-header">
+        <h2 id="eqMoverTitulo">Mover hospital</h2>
+        <button type="button" class="modal-fechar" data-fechar aria-label="Fechar">&times;</button>
+      </div>
+      <ul id="eqMoverLista" class="eq-lista-nomes"></ul>
+      <p id="eqMoverRota" class="eq-rota"></p>
+
+      <fieldset id="eqOpcoesTipo" class="eq-opcoes">
+        <legend>Tipo de mudança</legend>
+        <label class="eq-opcao">
+          <input type="radio" name="eqTipo" value="permanente">
+          <span><strong>Permanente</strong><span id="eqTxtPermanente" class="eq-opcao-desc"></span></span>
+        </label>
+        <label class="eq-opcao">
+          <input type="radio" name="eqTipo" value="temporario" id="eqTipoTemp">
+          <span><strong>Temporário</strong><span id="eqTxtTemporario" class="eq-opcao-desc"></span></span>
+        </label>
+      </fieldset>
+      <p id="eqMoverSemResp" class="painel-aviso eq-espaco" hidden></p>
+
+      <div id="eqMoverDatas" class="eq-datas" hidden>
+        <label>De <input type="date" id="eqMoverInicio"></label>
+        <label>Até <input type="date" id="eqMoverFim"></label>
+        <label>Motivo <select id="eqMoverMotivo"></select></label>
+      </div>
+      <p id="eqMoverDica" class="eq-dica" hidden></p>
+
+      <div class="modal-botoes">
+        <button type="button" class="btn-cinza" data-fechar>Cancelar</button>
+        <button type="button" id="eqMoverConfirmar" class="btn-primario">Confirmar</button>
+      </div>
+      <p id="eqMoverMsg" class="msg-feedback erro" role="alert"></p>
+    </div>
+  </div>
+
+  <div id="eqModalDestravar" class="modal-overlay eq-modal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="eqPinTitulo">
+      <div class="modal-header">
+        <h2 id="eqPinTitulo">Destravar edição</h2>
+        <button type="button" class="modal-fechar" data-fechar aria-label="Fechar">&times;</button>
+      </div>
+      <p class="painel-aviso">Digite sua senha de 6 números. A edição trava de novo após 5 minutos sem uso.</p>
+      <div class="modal-campo">
+        <label for="eqPin">Sua senha</label>
+        <input type="password" id="eqPin" class="eq-pin" inputmode="numeric" maxlength="6" autocomplete="current-password">
+      </div>
+      <div class="modal-botoes">
+        <button type="button" class="btn-cinza" data-fechar>Cancelar</button>
+        <button type="button" id="eqPinConfirmar" class="btn-primario">Destravar</button>
+      </div>
+      <p id="eqPinMsg" class="msg-feedback erro" role="alert"></p>
+    </div>
+  </div>
+
+  <div id="eqModalAusencia" class="modal-overlay eq-modal" hidden>
+    <div class="modal-card modal-card-largo" role="dialog" aria-modal="true" aria-labelledby="eqAusTitulo">
+      <div class="modal-header">
+        <h2 id="eqAusTitulo">Registrar ausência</h2>
+        <button type="button" class="modal-fechar" data-fechar aria-label="Fechar">&times;</button>
+      </div>
+      <p class="painel-aviso">Os hospitais da pessoa passam para quem cobrir e voltam sozinhos no fim do período.</p>
+      <div class="modal-campo">
+        <label for="eqAusPessoa">Quem vai se ausentar</label>
+        <select id="eqAusPessoa"></select>
+      </div>
+      <div class="eq-datas">
+        <label>De <input type="date" id="eqAusInicio"></label>
+        <label>Até <input type="date" id="eqAusFim"></label>
+        <label>Motivo <select id="eqAusMotivo"></select></label>
+      </div>
+      <fieldset class="eq-opcoes">
+        <legend>Quem cobre</legend>
+        <div class="eq-opcao eq-opcao-linha">
+          <label class="eq-opcao-rotulo"><input type="radio" name="eqAusModo" value="uma" checked> <strong>Todos para uma pessoa</strong></label>
+          <label class="visualmente-oculto" for="eqAusPara">Pessoa que cobre</label>
+          <select id="eqAusPara"></select>
+        </div>
+        <label class="eq-opcao eq-opcao-rotulo"><input type="radio" name="eqAusModo" value="dividir"> <strong>Dividir hospital por hospital</strong></label>
+      </fieldset>
+      <div id="eqAusLista" class="eq-distribuir" hidden></div>
+      <div class="modal-botoes">
+        <button type="button" class="btn-cinza" data-fechar>Cancelar</button>
+        <button type="button" id="eqAusConfirmar" class="btn-primario">Registrar ausência</button>
+      </div>
+      <p id="eqAusMsg" class="msg-feedback erro" role="alert"></p>
+    </div>
+  </div>
+
+  <div id="eqModalConfirmar" class="modal-overlay eq-modal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="eqConfTitulo">
+      <div class="modal-header">
+        <h2 id="eqConfTitulo"></h2>
+        <button type="button" class="modal-fechar" data-fechar aria-label="Fechar">&times;</button>
+      </div>
+      <p id="eqConfTexto" class="painel-aviso"></p>
+      <ul id="eqConfLista" class="eq-lista-nomes"></ul>
+      <div class="modal-botoes">
+        <button type="button" class="btn-cinza" data-fechar>Cancelar</button>
+        <button type="button" id="eqConfBotao" class="btn-primario"></button>
+      </div>
+      <p id="eqConfMsg" class="msg-feedback erro" role="alert"></p>
+    </div>
+  </div>
+
+  <div id="eqAviso" class="aviso-atualizacao" role="status" aria-live="polite" hidden></div>
+
+  <!-- ============================================================
        AVISO DISCRETO DE ATUALIZAÇÃO EM TEMPO REAL
        Aparece no canto da tela quando outra pessoa altera algo
        enquanto você está editando. Não bloqueia nem rouba o foco.
@@ -489,6 +668,7 @@
   <script src="js/lib/supabase-2.116.0.js"></script>
   <script src="js/supabase.js"></script>
   <script src="js/dashboard.js"></script>
+  <script src="js/equipe.js"></script>
   <script src="js/layout.js"></script>
 
 </body>

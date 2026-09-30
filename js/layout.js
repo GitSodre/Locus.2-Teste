@@ -5,7 +5,7 @@
  * pessoa pode ver continua no dashboard.js; este arquivo apenas
  * observa a página e espelha o estado na sidebar:
  *
- *  - item "Chamados"/"Usuários" some quando o painel está oculto
+ *  - item "Chamados"/"Equipe"/"Usuários" some quando o painel está oculto
  *  - badge de chamados em aberto repetido na sidebar
  *  - inicial do nome no avatar e o papel (Administrador/Usuário)
  *  - estado vazio da ficha enquanto nenhum convênio foi escolhido
@@ -22,6 +22,8 @@
 
     $("navChamados").hidden = painelChamados.hidden;
     $("navUsuarios").hidden = painelUsuarios.hidden;
+    const painelEquipe = $("painelEquipe");
+    if (painelEquipe) $("navEquipe").hidden = painelEquipe.hidden;
 
     const titulo = ($("tituloChamados")?.textContent || "").trim();
     $("navChamadosTexto").textContent = titulo === "Meus chamados" ? "Meus chamados" : "Chamados";
@@ -42,7 +44,7 @@
   }
 
   const observador = new MutationObserver(sincronizar);
-  ["painelChamados", "painelUsuarios", "tituloChamados", "badgeChamados", "usuarioLogado", "outConvenio"]
+  ["painelChamados", "painelUsuarios", "painelEquipe", "tituloChamados", "badgeChamados", "usuarioLogado", "outConvenio"]
     .forEach(id => {
       const el = $(id);
       if (el) {
@@ -58,7 +60,7 @@
   sincronizar();
 
   /* ---------- Navegação: uma seção por vez ---------- */
-  const SECOES = ["secaoConvenios", "painelChamados", "painelUsuarios"];
+  const SECOES = ["secaoConvenios", "painelChamados", "painelEquipe", "painelUsuarios"];
   const itens = Array.from(document.querySelectorAll(".nav-item"));
 
   function secaoDisponivel(id) {

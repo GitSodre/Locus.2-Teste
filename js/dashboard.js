@@ -2212,6 +2212,7 @@ function renderizarUsuarios(usuarios, participacao) {
     .forEach(u => {
       const item = document.createElement("div");
       item.className = "chamado-item";
+      item.dataset.busca = normalizarTexto(u.email);
 
       const info = document.createElement("div");
       info.className = "chamado-info";
@@ -2253,7 +2254,61 @@ function renderizarUsuarios(usuarios, participacao) {
       item.appendChild(acoes);
       lista.appendChild(item);
     });
+
+  // A lista é redesenhada depois de cada alteração: reaplica a busca
+  filtrarUsuarios();
 }
+
+/* Busca do painel Usuários: conforme digita, só ficam os que batem.
+ * Procura em qualquer parte do email, sem ligar para acento ou maiúscula. */
+function filtrarUsuarios() {
+  const lista = document.getElementById("listaUsuarios");
+  const campo = document.getElementById("buscaUsuarios");
+  const qtd = document.getElementById("buscaUsuariosQtd");
+  if (!lista || !campo) return;
+
+  const termo = normalizarTexto(campo.value);
+  const itens = Array.from(lista.querySelectorAll(".chamado-item"));
+  let visiveis = 0;
+  let primeiro = true;
+
+  itens.forEach(item => {
+    const mostra = !termo || (item.dataset.busca || "").includes(termo);
+    item.hidden = !mostra;
+    // Sem linha divisória em cima do primeiro que sobrou
+    item.classList.toggle("primeiro-visivel", mostra && primeiro);
+    if (mostra) { visiveis++; primeiro = false; }
+  });
+
+  let vazio = document.getElementById("buscaUsuariosVazio");
+  if (termo && itens.length && !visiveis) {
+    if (!vazio) {
+      vazio = document.createElement("p");
+      vazio.id = "buscaUsuariosVazio";
+      vazio.className = "painel-aviso";
+      lista.appendChild(vazio);
+    }
+    vazio.textContent = `Nenhum usuário encontrado para "${campo.value.trim()}".`;
+  } else {
+    vazio?.remove();
+  }
+
+  if (qtd) qtd.textContent = termo && itens.length ? `${visiveis} de ${itens.length}` : "";
+}
+
+function prepararBuscaUsuarios() {
+  const campo = document.getElementById("buscaUsuarios");
+  if (!campo) return;
+  campo.addEventListener("input", filtrarUsuarios);
+  // Esc limpa a busca
+  campo.addEventListener("keydown", e => {
+    if (e.key === "Escape" && campo.value) {
+      campo.value = "";
+      filtrarUsuarios();
+    }
+  });
+}
+prepararBuscaUsuarios();
 
 /* Altera o tipo (admin/usuario) de um usuário via função RPC restrita a admins */
 async function alterarTipoUsuario(email, novoTipo) {

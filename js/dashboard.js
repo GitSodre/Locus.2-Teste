@@ -21,8 +21,13 @@ window.logout = async function () {
   window.location.href = "index.html";
 };
 
+// Sem onclick no HTML: a CSP do vercel.json bloqueia handlers inline
+document.getElementById("btnSair")?.addEventListener("click", () => window.logout());
+
 let conveniosCache = [];
-let isAdmin = false;
+let isAdmin = false;            // gestor de Convênios: edita convênios e atende chamados
+let isAdministrador = false;    // administrador: acesso total e tela de Usuários
+let acesso = null;              // níveis da pessoa logada (meu_acesso)
 let currentUserEmail = "";
 let currentUserName = "";
 let convenioAtual = null;       // convênio selecionado nos filtros
@@ -46,6 +51,32 @@ let ultimoTotalAbertos = null;       // para detectar CRESCIMENTO da fila (null 
 let canalConvenios = null;           // canal WebSocket de convenios / convenio_acessos
 let recarregarConveniosTimer = null; // debounce dos eventos de convênio
 let redesenhoConveniosPendente = false; // mudou algo enquanto a tela estava ocupada
+
+/* =====================================================
+   ACESSO — um nível por módulo (sql/permissoes.sql)
+   Carregado uma vez e compartilhado com quadro.js e calendario.js
+   por window.locusAcesso (uma Promise). O bloqueio de verdade é feito
+   no banco; aqui só decide o que aparece.
+===================================================== */
+const NIVEIS = ["sem", "consulta", "operador", "gestor"];
+const temNivel = (nivel, minimo) => NIVEIS.indexOf(nivel || "sem") >= NIVEIS.indexOf(minimo);
+window.locusNivel = temNivel;
+
+window.locusAcesso = (async () => {
+  const { data: s } = await supabaseClient.auth.getSession();
+  if (!s?.session) return null;
+
+  const { data, error } = await supabaseClient.rpc("meu_acesso");
+  const linha = Array.isArray(data) ? data[0] : data;
+  if (!error && linha) return { ...linha, administrador: linha.administrador === true };
+
+  // Sem resposta do banco: nada liberado (o menu mostra tudo bloqueado)
+  console.error("Não foi possível carregar os níveis de acesso:", error?.message);
+  return {
+    liberado: false, administrador: false, convenios: "sem", prefat: "sem", calendario: "sem",
+    faturamento: "sem", prefat_proprio: "sem", calendario_proprio: "sem", faturamento_proprio: "sem"
+  };
+})();
 
 /* ================= INIT ================= */
 document.addEventListener("DOMContentLoaded", async () => {
@@ -84,6 +115,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   await verificarPapel();
 
+  // Sem acesso a Convênios: não há o que carregar (o item fica bloqueado)
+  if (!temNivel(acesso.convenios, "consulta")) return;
+
   const { data, error } = await supabaseClient
     .from("convenios")
     .select("*");
@@ -115,15 +149,23 @@ async function verificarPapel() {
 
   exibirUsuarioLogado(currentUserEmail);
 
-  const { data: userRow, error } = await supabaseClient
-    .from("usuarios")
-    .select("tipo")
-    .eq("email", currentUserEmail)
-    .maybeSingle();
+  acesso = (await window.locusAcesso) || {
+    liberado: false, administrador: false, convenios: "sem", prefat: "sem", calendario: "sem",
+    faturamento: "sem"
+  };
+  isAdmin = acesso.convenios === "gestor";
+  isAdministrador = acesso.administrador === true;
 
-  if (error) console.error("Erro ao verificar papel do usuário:", error);
+  // O menu mostra todos os itens; os sem permissão ficam bloqueados
+  window.locusLayout?.definirAcesso({
+    secaoConvenios: temNivel(acesso.convenios, "consulta"),
+    painelEquipe: temNivel(acesso.prefat, "consulta"),
+    painelFaturamento: temNivel(acesso.faturamento, "consulta"),
+    painelCalendario: temNivel(acesso.calendario, "consulta"),
+    painelChamados: temNivel(acesso.convenios, "consulta"),
+    painelUsuarios: isAdministrador
+  }, { administrador: isAdministrador });
 
-  isAdmin = (userRow?.tipo || "").toString().toLowerCase() === "admin";
   aplicarVisibilidadeAdmin();
 }
 
@@ -139,27 +181,32 @@ function aplicarVisibilidadeAdmin() {
   const painelChamados = document.getElementById("painelChamados");
   const painelUsuarios = document.getElementById("painelUsuarios");
 
-  if (painelUsuarios) painelUsuarios.hidden = !isAdmin;
+  const temConvenios = temNivel(acesso.convenios, "consulta");
+  const secaoConvenios = document.getElementById("secaoConvenios");
+  if (secaoConvenios) secaoConvenios.hidden = !temConvenios;
+  if (painelUsuarios) painelUsuarios.hidden = !isAdministrador;
 
   // Edição e criação de convênio não são mais painéis na página: viraram
   // modais, abertos pelos MESMOS dois botões que o usuário comum usa para
   // abrir chamado (ver aplicarBotoesContextuais).
   aplicarBotoesContextuais();
 
-  // O painel de chamados agora aparece para todo mundo: o admin enxerga
-  // a fila inteira e atende; o usuário comum acompanha só os próprios.
-  if (painelChamados) painelChamados.hidden = false;
+  // Chamados: o gestor de Convênios enxerga a fila inteira e atende;
+  // quem consulta Convênios acompanha só os próprios ("Meus chamados").
+  if (painelChamados) painelChamados.hidden = !temConvenios;
 
   const tituloChamados = document.getElementById("tituloChamados");
   if (tituloChamados) {
     tituloChamados.textContent = isAdmin ? "Chamados de alteração" : "Meus chamados";
   }
 
-  carregarChamados();
-  assinarChamadosRealtime();
-  assinarConveniosRealtime();
+  if (temConvenios) {
+    carregarChamados();
+    assinarChamadosRealtime();
+    assinarConveniosRealtime();
+  }
 
-  if (isAdmin) {
+  if (isAdministrador) {
     carregarUsuarios();
   }
 }
@@ -908,19 +955,21 @@ function prepararPainelAdmin() {
   document.getElementById("btnExcluirConvenio")?.addEventListener("click", excluirConvenio);
   document.getElementById("btnCancelarNovoConvenio")?.addEventListener("click", cancelarNovoConvenio);
 
-  // Fechar os modais administrativos (X, clique fora e tecla Esc)
+  // Fechar os modais (X e tecla Esc). Clique fora NÃO fecha, para evitar
+  // perder o preenchimento por um clique acidental no fundo.
   document.getElementById("btnFecharModalEdicao")?.addEventListener("click", fecharModalEdicao);
   document.getElementById("btnFecharModalNovoConvenio")?.addEventListener("click", fecharModalNovoConvenio);
-
-  fecharAoClicarFora("modalEdicao", fecharModalEdicao);
-  fecharAoClicarFora("modalNovoConvenio", fecharModalNovoConvenio);
 
   document.addEventListener("keydown", e => {
     if (e.key !== "Escape") return;
     const edicao = document.getElementById("modalEdicao");
     const criacao = document.getElementById("modalNovoConvenio");
+    const chamado = document.getElementById("modalChamado");
+    const cadastro = document.getElementById("modalCadastro");
     if (edicao && !edicao.hidden) return fecharModalEdicao();
     if (criacao && !criacao.hidden) return fecharModalNovoConvenio();
+    if (chamado && !chamado.hidden) { chamado.hidden = true; return aplicarRedesenhoPendente(); }
+    if (cadastro && !cadastro.hidden) { cadastro.hidden = true; return aplicarRedesenhoPendente(); }
   });
 
   document.getElementById("btnAddAcesso")?.addEventListener("click", () => {
@@ -941,16 +990,6 @@ function prepararPainelAdmin() {
   // correspondente é aberto pelo admin.
   aplicarModoEdicaoConvenio();
   aplicarModoCriacao();
-}
-
-/* Fecha o modal quando o clique acontece no fundo escuro, fora do card */
-function fecharAoClicarFora(modalId, aoFechar) {
-  const modal = document.getElementById(modalId);
-  if (!modal) return;
-
-  modal.addEventListener("click", e => {
-    if (e.target === modal) aoFechar();
-  });
 }
 
 /* Converte o valor do campo para maiúsculas a cada digitação, mantendo o cursor no lugar */
@@ -1774,7 +1813,9 @@ function montarDiffChamado(c, convenioRef) {
     propostos.forEach(([rotulo, valor], i) => {
       if (i > 0) fragNovo.appendChild(document.createElement("br"));
       fragNovo.appendChild(document.createTextNode(`${rotulo}: `));
-      fragNovo.appendChild(criarForte(valor));
+      const forte = criarForte(valor);
+      if (rotulo === "Observação") forte.style.whiteSpace = "pre-wrap"; // mantém as quebras de linha
+      fragNovo.appendChild(forte);
     });
     return fragNovo;
   }
@@ -2142,7 +2183,6 @@ async function atualizarStatusChamado(id, status, extras = {}) {
       data_conclusao: new Date().toISOString(),
       admin_concluiu_email: currentUserEmail,
       admin_concluiu_nome: currentUserName,
-      visto_pelo_usuario: false,   // volta a contar como novidade para o solicitante
       ...extras
     })
     .eq("id", id);
@@ -2164,94 +2204,132 @@ async function atualizarStatusChamado(id, status, extras = {}) {
 }
 
 /* =====================================================
-   PAINEL ADMIN — GERENCIAR USUÁRIOS
-   Usa funções (RPC) no Supabase que só administradores podem chamar:
-   admin_listar_usuarios / admin_definir_tipo_usuario
+   USUÁRIOS — só administrador
+   Um nível por módulo + administrador. Tudo passa por funções no banco
+   (admin_listar_acessos / admin_definir_nivel / admin_definir_administrador),
+   que conferem se quem chamou é administrador e registram no log.
 ===================================================== */
+const MODULOS_USUARIOS = [
+  { chave: "convenios", rotulo: "Convênios (senhas)", niveis: ["sem", "consulta", "gestor"] },
+  { chave: "prefat", rotulo: "Pré-faturamento", niveis: ["sem", "consulta", "operador", "gestor"] },
+  { chave: "faturamento", rotulo: "Faturamento", niveis: ["sem", "consulta", "operador", "gestor"] },
+  { chave: "calendario", rotulo: "Calendário de entrega", niveis: ["sem", "consulta", "operador", "gestor"] }
+];
+const ROTULO_NIVEL = { sem: "Sem acesso", consulta: "Consulta", operador: "Operador", gestor: "Gestor" };
+
+function mensagemDoBanco(error, padrao) {
+  if (error && (error.code === "P0001" || error.code === "42501") && error.message) return error.message;
+  return padrao;
+}
+
 async function carregarUsuarios() {
   const lista = document.getElementById("listaUsuarios");
   if (!lista) return;
 
-  const { data, error } = await supabaseClient.rpc("admin_listar_usuarios");
+  const { data, error } = await supabaseClient.rpc("admin_listar_acessos");
 
   if (error) {
     console.error("Erro ao carregar usuários:", error);
-    lista.innerHTML = '<p class="msg-feedback erro">Não foi possível carregar os usuários. Verifique se as funções admin_listar_usuarios / admin_definir_tipo_usuario foram criadas no Supabase.</p>';
+    lista.replaceChildren();
+    const p = document.createElement("p");
+    p.className = "msg-feedback erro";
+    p.textContent = "Não foi possível carregar os usuários. Verifique se o sql/permissoes.sql foi rodado no Supabase.";
+    lista.appendChild(p);
     return;
   }
 
-  // Quem participa do Pré-faturamento (tem coluna na aba). Se a coluna
-  // participa_equipe ainda não existir no banco, a caixinha só não aparece.
-  let participacao = null;
-  const { data: part, error: errPart } = await supabaseClient
-    .from("usuarios")
-    .select("email,participa_equipe");
-  if (errPart) {
-    console.warn("Participação na Equipe indisponível (rode sql/equipe-participacao.sql):", errPart.message);
-  } else {
-    participacao = new Map((part || []).map(u => [(u.email || "").toLowerCase(), u.participa_equipe !== false]));
-  }
-
-  renderizarUsuarios(data || [], participacao);
+  renderizarUsuarios(data || []);
 }
 
-function renderizarUsuarios(usuarios, participacao) {
+function renderizarUsuarios(usuarios) {
   const lista = document.getElementById("listaUsuarios");
   if (!lista) return;
+  lista.replaceChildren();
 
   if (usuarios.length === 0) {
-    lista.innerHTML = '<p class="painel-aviso">Nenhum usuário cadastrado.</p>';
+    const p = document.createElement("p");
+    p.className = "painel-aviso";
+    p.textContent = "Nenhum usuário cadastrado.";
+    lista.appendChild(p);
     return;
   }
 
-  lista.innerHTML = "";
+  // Cabeçalho das colunas (some no celular, onde cada campo tem rótulo)
+  const cab = document.createElement("div");
+  cab.className = "usuario-cabecalho";
+  ["Usuário", ...MODULOS_USUARIOS.map(m => m.rotulo), "Administrador"].forEach(t => {
+    const span = document.createElement("span");
+    span.textContent = t;
+    cab.appendChild(span);
+  });
+  lista.appendChild(cab);
+
+  const eu = (currentUserEmail || "").toLowerCase();
 
   usuarios
     .slice()
     .sort((a, b) => (a.email || "").localeCompare(b.email || "", "pt-BR"))
     .forEach(u => {
       const item = document.createElement("div");
-      item.className = "chamado-item";
+      item.className = "chamado-item usuario-linha";
       item.dataset.busca = normalizarTexto(u.email);
 
       const info = document.createElement("div");
-      info.className = "chamado-info";
-      info.appendChild(criarP(null, criarForte(u.email)));
-
-      const acoes = document.createElement("div");
-      acoes.className = "chamado-acoes";
-
-      const select = document.createElement("select");
-      select.className = "select-tipo-usuario";
-      [
-        { valor: "usuario", rotulo: "Usuário" },
-        { valor: "admin", rotulo: "Admin" }
-      ].forEach(({ valor, rotulo }) => {
-        const opt = document.createElement("option");
-        opt.value = valor;
-        opt.textContent = rotulo;
-        if ((u.tipo || "").toString().toLowerCase() === valor) opt.selected = true;
-        select.appendChild(opt);
-      });
-      select.addEventListener("change", () => alterarTipoUsuario(u.email, select.value));
-
-      if (participacao) {
-        const rotulo = document.createElement("label");
-        rotulo.className = "usuario-equipe";
-        rotulo.title = "Marcado: tem coluna na aba Pré-faturamento e pode receber hospitais";
-        const chk = document.createElement("input");
-        chk.type = "checkbox";
-        chk.checked = participacao.get((u.email || "").toLowerCase()) !== false;
-        chk.setAttribute("aria-label", `${u.email} faz parte do Pré-faturamento`);
-        chk.addEventListener("change", () => alterarParticipacaoEquipe(u.email, chk));
-        rotulo.append(chk, document.createTextNode("Pré-faturamento"));
-        acoes.appendChild(rotulo);
+      info.className = "usuario-email";
+      info.appendChild(criarForte(u.email));
+      if ((u.email || "").toLowerCase() === eu) {
+        const tag = document.createElement("span");
+        tag.className = "usuario-tag";
+        tag.textContent = "Você";
+        info.appendChild(tag);
       }
-
-      acoes.appendChild(select);
-
+      if (u.primeiro_acesso) {
+        const tag = document.createElement("span");
+        tag.className = "usuario-tag usuario-tag-pendente";
+        tag.textContent = "Primeiro acesso pendente";
+        tag.title = "Ainda não trocou a senha temporária";
+        info.appendChild(tag);
+      }
       item.appendChild(info);
-      item.appendChild(acoes);
+
+      MODULOS_USUARIOS.forEach(mod => {
+        const atual = u["nivel_" + mod.chave] || "sem";
+        const rotulo = document.createElement("label");
+        rotulo.className = "usuario-nivel";
+
+        const nome = document.createElement("span");
+        nome.className = "usuario-nivel-rotulo";
+        nome.textContent = mod.rotulo;
+
+        const select = document.createElement("select");
+        select.className = "select-nivel nivel-" + atual;
+        select.setAttribute("aria-label", `${mod.rotulo} de ${u.email}`);
+        const niveis = mod.niveis.includes(atual) ? mod.niveis : [...mod.niveis, atual];
+        niveis.forEach(n => {
+          const opt = document.createElement("option");
+          opt.value = n;
+          opt.textContent = ROTULO_NIVEL[n] || n;
+          select.appendChild(opt);
+        });
+        select.value = atual;
+        select.dataset.anterior = atual;
+        select.addEventListener("change", () => alterarNivel(u.email, mod, select));
+
+        rotulo.append(nome, select);
+        item.appendChild(rotulo);
+      });
+
+      const adm = document.createElement("label");
+      adm.className = "usuario-equipe usuario-admin";
+      adm.title = "Acesso total em todos os módulos e à tela de Usuários";
+      const chk = document.createElement("input");
+      chk.type = "checkbox";
+      chk.checked = u.administrador === true;
+      chk.setAttribute("aria-label", `${u.email} é administrador`);
+      chk.addEventListener("change", () => alterarAdministrador(u.email, chk));
+      adm.append(chk, document.createTextNode("Administrador"));
+      item.appendChild(adm);
+
       lista.appendChild(item);
     });
 
@@ -2322,74 +2400,91 @@ function prepararBuscaUsuarios() {
 }
 prepararBuscaUsuarios();
 
-/* Altera o tipo (admin/usuario) de um usuário via função RPC restrita a admins */
-async function alterarTipoUsuario(email, novoTipo) {
-  const rotulo = novoTipo === "admin" ? "Admin" : "Usuário";
-  const confirmou = confirm(`Definir "${email}" como ${rotulo}?`);
+/* Muda o nível de uma pessoa num módulo */
+async function alterarNivel(email, mod, select) {
+  const novo = select.value;
+  const anterior = select.dataset.anterior;
+  const recebeTrabalho = n => n === "operador" || n === "gestor";
 
-  if (!confirmou) {
-    await carregarUsuarios(); // desfaz a seleção visualmente
-    return;
-  }
-
-  const { error } = await supabaseClient.rpc("admin_definir_tipo_usuario", {
-    p_email: email,
-    p_tipo: novoTipo
-  });
-
-  if (error) {
-    console.error("Erro ao alterar tipo do usuário:", error);
-    alert("Não foi possível alterar o tipo deste usuário.");
-    await carregarUsuarios();
-    return;
-  }
-
-  // Se o admin alterou o próprio tipo, atualiza a visibilidade dos painéis na hora
-  if (email === currentUserEmail) {
-    isAdmin = novoTipo === "admin";
-    aplicarVisibilidadeAdmin();
-  }
-
-  await carregarUsuarios();
-}
-
-/* Entra / sai do Pré-faturamento (coluna na aba Pré-faturamento) via RPC restrita a admins */
-async function alterarParticipacaoEquipe(email, chk) {
-  const participa = chk.checked;
-
-  if (!participa) {
-    // Avisa se a pessoa ainda responde por algum hospital
+  // Quem deixa de ser operador/gestor de um quadro (Pré-faturamento ou
+  // Faturamento) mas ainda tem itens continua com coluna ("Fora do ...")
+  // até eles serem movidos; avisa antes.
+  const QUADROS = {
+    prefat: { tabela: "hospital_responsavel", coluna: "hospital_id", um: "hospital", varios: "hospitais", nome: "Pré-faturamento" },
+    faturamento: { tabela: "fat_responsavel", coluna: "convenio_id", um: "convênio", varios: "convênios", nome: "Faturamento" }
+  };
+  const quadro = QUADROS[mod.chave];
+  if (quadro && recebeTrabalho(anterior) && !recebeTrabalho(novo)) {
     const { count } = await supabaseClient
-      .from("hospital_responsavel")
-      .select("hospital_id", { count: "exact", head: true })
+      .from(quadro.tabela)
+      .select(quadro.coluna, { count: "exact", head: true })
       .eq("responsavel_email", (email || "").toLowerCase());
 
     if (count > 0) {
       const ok = confirm(
-        `${email} ainda é responsável por ${count} ${count === 1 ? "hospital" : "hospitais"}.\n\n` +
-        "A coluna dela continua no Pré-faturamento, marcada como \"Fora do Pré-faturamento\", até você mover esses hospitais. " +
-        "Ela não recebe hospitais novos.\n\nTirar do Pré-faturamento mesmo assim?"
+        `${email} ainda é responsável por ${count} ${count === 1 ? quadro.um : quadro.varios}.\n\n` +
+        `A coluna dela continua no ${quadro.nome}, marcada como "Fora do ${quadro.nome}", até você mover esses ${quadro.varios}. ` +
+        `Ela não recebe ${quadro.varios} novos.\n\nAlterar mesmo assim?`
       );
-      if (!ok) { chk.checked = true; return; }
+      if (!ok) { select.value = anterior; return; }
     }
   }
 
-  chk.disabled = true;
-  const { error } = await supabaseClient.rpc("equipe_definir_participacao", {
+  select.disabled = true;
+  const { error } = await supabaseClient.rpc("admin_definir_nivel", {
     p_email: email,
-    p_participa: participa
+    p_modulo: mod.chave,
+    p_nivel: novo
+  });
+  select.disabled = false;
+
+  if (error) {
+    console.error("Erro ao alterar nível:", error);
+    alert(mensagemDoBanco(error, "Não foi possível alterar o acesso desta pessoa."));
+    select.value = anterior;
+    return;
+  }
+
+  select.dataset.anterior = novo;
+  select.className = "select-nivel nivel-" + novo;
+  aposAlterarAcesso(email, mod.chave);
+}
+
+/* Dá ou tira administrador (o banco não deixa o sistema sem nenhum) */
+async function alterarAdministrador(email, chk) {
+  const novo = chk.checked;
+  const ok = confirm(novo
+    ? `Tornar ${email} administrador?\n\nA pessoa passa a ter acesso total em todos os módulos e a esta tela de Usuários.`
+    : `Tirar o administrador de ${email}?\n\nA pessoa fica só com os níveis marcados em cada módulo.`);
+  if (!ok) { chk.checked = !novo; return; }
+
+  chk.disabled = true;
+  const { error } = await supabaseClient.rpc("admin_definir_administrador", {
+    p_email: email,
+    p_administrador: novo
   });
   chk.disabled = false;
 
   if (error) {
-    console.error("Erro ao alterar participação no Pré-faturamento:", error);
-    alert("Não foi possível alterar a participação desta pessoa no Pré-faturamento.");
-    chk.checked = !participa;
+    console.error("Erro ao alterar administrador:", error);
+    alert(mensagemDoBanco(error, "Não foi possível alterar o administrador."));
+    chk.checked = !novo;
     return;
   }
 
-  // A aba Pré-faturamento recarrega para a coluna aparecer ou sumir
-  document.dispatchEvent(new CustomEvent("equipe:recarregar"));
+  aposAlterarAcesso(email, null);
+}
+
+function aposAlterarAcesso(email, modulo) {
+  // Mudou o próprio acesso: recarrega a página para o menu se ajustar
+  if ((email || "").toLowerCase() === (currentUserEmail || "").toLowerCase()) {
+    window.location.reload();
+    return;
+  }
+  // As outras abas recarregam (colunas do Pré-faturamento e do Faturamento, permissões do Calendário)
+  if (!modulo || modulo === "prefat") document.dispatchEvent(new CustomEvent("equipe:recarregar"));
+  if (!modulo || modulo === "faturamento") document.dispatchEvent(new CustomEvent("faturamento:recarregar"));
+  if (!modulo || modulo === "calendario") document.dispatchEvent(new CustomEvent("calendario:recarregar"));
 }
 
 /* ================= LIMPEZA ================= */

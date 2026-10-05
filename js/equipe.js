@@ -1,10 +1,14 @@
 /*
  * EQUIPE.JS — quem responde por cada hospital.
  *
- * Admin   : quadro com uma coluna por pessoa. Com a edição destravada,
- *           arrasta hospitais (ou marca vários e usa "Mover para...")
- *           e escolhe se a troca é permanente ou temporária.
- * Usuário : vê só os hospitais dele (fixos, cobrindo e com outra pessoa).
+ * Pelo nível no Pré-faturamento (sql/permissoes.sql):
+ * Gestor   : quadro com uma coluna por pessoa. Com a edição destravada,
+ *            arrasta hospitais (ou marca vários e usa "Mover para...")
+ *            e escolhe se a troca é permanente ou temporária.
+ * Operador : é o pré-faturista. Vê os hospitais dele em destaque (fixos,
+ *            cobrindo e com outra pessoa) e, abaixo, todos os hospitais
+ *            com o responsável de cada um, só para consulta.
+ * Consulta : só a lista de todos os hospitais com o responsável.
  *
  * As regras de verdade ficam no banco (sql/equipe.sql): a leitura é
  * filtrada por RLS e toda alteração passa por funções que conferem se
@@ -19,7 +23,7 @@
  * Na tela esta seção se chama "Pré-faturamento"; no código e no banco
  * continua "equipe" (ids eq*, funções equipe_*) para não quebrar nada.
  *
- * Quem tem coluna vem de usuarios.participa_equipe (marcado em Usuários).
+ * Quem tem coluna: nível Operador ou Gestor no Pré-faturamento (tela Usuários).
  * Quem saiu do Pré-faturamento mas ainda tem hospital continua com coluna,
  * marcada "Fora do Pré-faturamento", até os hospitais serem movidos; não
  * recebe hospital novo.
@@ -44,7 +48,8 @@
 
   const st = {
     email: "",
-    admin: false,
+    admin: false,            // gestor do Pré-faturamento: quadro editável
+    operador: false,         // pré-faturista: tem hospitais (os seus em destaque)
     hoje: "",
     hospitais: [],           // [{id, nome}]
     donos: new Map(),        // hospital_id -> email do responsável fixo
@@ -64,6 +69,9 @@
     ocultas: new Set(),      // pessoas desmarcadas em "Pessoas" (só visualização)
     chavePessoas: "",        // evita remontar a lista de pessoas sem necessidade
     acao: null,              // o que o modal aberto vai confirmar
+    consulta: null,          // todos os hospitais e responsáveis (só usuário; null = indisponível)
+    consultaBusca: "",
+    consultaFiltro: "todos",
     ultimaCarga: 0,
     carregando: false,
     pronto: false
@@ -136,31 +144,26 @@
 
     st.email = (sessao.user?.email || "").toLowerCase();
 
-    const { data: ehAdmin, error } = await supabaseClient.rpc("equipe_eh_admin");
-    if (error) {
-      // Funções ainda não criadas no Supabase: a seção fica escondida
-      console.warn("Equipe indisponível (rode sql/equipe.sql):", error.message);
-      return;
+    // Nível no Pré-faturamento (o dashboard.js busca uma vez para todos)
+    const acesso = window.locusAcesso ? await window.locusAcesso : null;
+    if (acesso) {
+      if (!window.locusNivel(acesso.prefat, "consulta")) return; // sem acesso: item bloqueado
+      st.admin = acesso.prefat === "gestor";
+      st.operador = acesso.prefat_proprio === "operador" || acesso.prefat_proprio === "gestor";
+    } else {
+      const { data: ehAdmin, error } = await supabaseClient.rpc("equipe_eh_admin");
+      if (error) {
+        console.warn("Pré-faturamento indisponível:", error.message);
+        return;
+      }
+      st.admin = ehAdmin === true;
+      st.operador = true;
     }
-    st.admin = ehAdmin === true;
 
     prepararTela();
-    const ok = await carregar();
-    if (!ok) return;
-
-    // Usuário que não faz parte da Equipe e não tem hospital nenhum:
-    // a aba "Meus hospitais" não faz sentido para ele e fica escondida.
-    if (!st.admin && !st.porId.size && !st.coberturas.length) {
-      const { data: eu, error: errEu } = await supabaseClient
-        .from("usuarios").select("participa_equipe").limit(1).maybeSingle();
-      if (!errEu && eu && eu.participa_equipe === false) return;
-    }
-
-    $("navEquipeTexto").textContent = st.admin ? "Pré-faturamento" : "Meus hospitais";
-    $("tituloEquipe").textContent = st.admin ? "Pré-faturamento" : "Meus hospitais";
     $("painelEquipe").hidden = false;
-    $("navEquipe").hidden = false;
     st.pronto = true;
+    await carregar();
   });
 
   function prepararTela() {
@@ -169,7 +172,9 @@
     $("eqUsuario").hidden = st.admin;
     $("eqSubtitulo").textContent = st.admin
       ? "Quem responde por cada hospital. Destrave a edição para arrastar os cards."
-      : "Os hospitais pelos quais você responde hoje. Só um administrador pode alterar esta lista.";
+      : st.operador
+        ? "Os hospitais pelos quais você responde hoje e, abaixo, quem responde pelos demais. Só um gestor pode alterar."
+        : "Quem responde por cada hospital. Só um gestor pode alterar.";
 
     prepararModais();
 
@@ -247,6 +252,11 @@
     ];
     if (st.admin) consultas.push(supabaseClient.rpc("equipe_listar_pessoas"));
 
+    // Consulta de responsáveis (somente leitura). Fica fora do Promise.all
+    // de cima: se a função ainda não existir no banco, a tela continua
+    // funcionando, só sem a lista "Todos os hospitais".
+    const pConsulta = st.admin ? null : supabaseClient.rpc("equipe_consultar_responsaveis");
+
     const res = await Promise.all(consultas);
     st.carregando = false;
     st.ultimaCarga = Date.now();
@@ -266,7 +276,7 @@
     }));
 
     if (st.admin) {
-      // Só quem participa da Equipe (usuarios.participa_equipe)
+      // Quem tem nível Operador ou Gestor no Pré-faturamento
       const equipe = new Set((res[3].data || []).map(p => (p.email || "").toLowerCase()).filter(Boolean));
       const pessoas = new Set(equipe);
       // Quem saiu da Equipe (ou do Locus) mas ainda é dono de hospital ou está
@@ -275,6 +285,22 @@
       st.coberturas.forEach(c => { if (c.inicio <= st.hoje) pessoas.add(c.para_email); });
       st.foraEquipe = new Set([...pessoas].filter(p => !equipe.has(p)));
       st.pessoas = [...pessoas].sort();
+    }
+
+    if (pConsulta) {
+      const { data: todos, error: errConsulta } = await pConsulta;
+      if (errConsulta) {
+        console.warn("Consulta de responsáveis indisponível (rode sql/equipe-consulta.sql):", errConsulta.message);
+        st.consulta = null;
+      } else {
+        st.consulta = (todos || []).map(h => ({
+          id: h.hospital_id,
+          nome: h.nome,
+          dono: (h.responsavel_email || "").toLowerCase() || null,
+          cobrindo: (h.cobrindo_email || "").toLowerCase() || null,
+          fim: h.cobertura_fim
+        }));
+      }
     }
 
     montar();
@@ -1026,6 +1052,13 @@
     const raiz = $("eqUsuario");
     raiz.replaceChildren();
     const me = st.email;
+
+    // Nível Consulta: não tem hospitais, só consulta quem responde por cada um
+    if (!st.operador) {
+      if (st.consulta) raiz.append(blocoConsulta());
+      else raiz.append(el("p", "eq-vazio eq-vazio-grande", "Não foi possível carregar a lista de hospitais."));
+      return;
+    }
     const infos = [...st.porId.values()];
 
     const cobrindo = infos.filter(i => i.cob && i.cob.para_email === me);
@@ -1035,6 +1068,7 @@
 
     if (!cobrindo.length && !fixos.length && !fora.length && !agendadas.length) {
       raiz.append(el("p", "eq-vazio eq-vazio-grande", "Nenhum hospital atribuído a você ainda."));
+      if (st.consulta) raiz.append(blocoConsulta());
       return;
     }
 
@@ -1067,6 +1101,101 @@
     raiz.append(fora.length
       ? bloco("Seus hospitais com outra pessoa", "Enquanto você está fora, quem responde por eles é:", fora, "fora")
       : bloco("Seus hospitais com outra pessoa", "Nenhum no momento. Quando você tiver uma ausência registrada, aparece aqui quem está cobrindo cada hospital.", [], "fora"));
+
+    if (st.consulta) raiz.append(blocoConsulta());
+  }
+
+  /* ---------- Todos os hospitais (somente consulta) ----------
+     Mostra quem responde por cada hospital. Não tem nenhuma ação:
+     os dados vêm de equipe_consultar_responsaveis(), que só lê. */
+  function blocoConsulta() {
+    const s = el("section", "eq-bloco eq-bloco-consulta");
+
+    const topo = el("div", "eq-consulta-topo");
+    topo.append(el("h2", null, `Todos os hospitais · ${st.consulta.length}`),
+      el("span", "eq-selo-consulta", "Somente consulta"));
+    s.append(topo);
+    s.append(el("p", "eq-bloco-desc",
+      "Veja quem responde por cada hospital. Para mudar alguma coisa, fale com um gestor do Pré-faturamento."));
+
+    const barra = el("div", "eq-consulta-barra");
+    const busca = el("label", "eq-busca");
+    busca.append(el("span", "visualmente-oculto", "Buscar hospital ou pessoa"), icone("busca"));
+    const input = el("input");
+    input.type = "search";
+    input.placeholder = "Buscar hospital ou pessoa…";
+    input.autocomplete = "off";
+    input.spellcheck = false;
+    input.value = st.consultaBusca;
+    busca.append(input);
+
+    const filtros = el("div", "eq-consulta-filtros");
+    filtros.setAttribute("role", "group");
+    filtros.setAttribute("aria-label", "Filtrar hospitais");
+    const opcoes = [["todos", "Todos"], ["cobertura", "Em cobertura"], ["sem", "Sem responsável"]];
+    const botoes = opcoes.map(([valor, rotulo]) => {
+      const b = el("button", "eq-filtro", rotulo);
+      b.type = "button";
+      b.dataset.filtro = valor;
+      b.setAttribute("aria-pressed", String(st.consultaFiltro === valor));
+      return b;
+    });
+    filtros.append(...botoes);
+    barra.append(busca, filtros);
+    s.append(barra);
+
+    const lista = el("div", "eq-consulta-lista");
+    const vazio = el("p", "eq-consulta-vazio", "Nenhum hospital encontrado.");
+    s.append(lista, vazio);
+
+    // Só a lista é redesenhada ao buscar/filtrar, para não perder o foco do campo
+    const desenhar = () => {
+      lista.replaceChildren();
+      const termo = norm(st.consultaBusca);
+      let n = 0;
+      st.consulta.forEach(h => {
+        if (st.consultaFiltro === "cobertura" && !h.cobrindo) return;
+        if (st.consultaFiltro === "sem" && h.dono) return;
+        if (termo && !norm(`${h.nome} ${curto(h.dono)} ${curto(h.cobrindo)}`).includes(termo)) return;
+        lista.append(linhaConsulta(h));
+        n++;
+      });
+      vazio.hidden = n > 0;
+    };
+
+    input.addEventListener("input", () => { st.consultaBusca = input.value; desenhar(); });
+    botoes.forEach(b => b.addEventListener("click", () => {
+      st.consultaFiltro = b.dataset.filtro;
+      botoes.forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+      desenhar();
+    }));
+
+    desenhar();
+    return s;
+  }
+
+  function linhaConsulta(h) {
+    const me = st.email;
+    const meu = h.dono === me || h.cobrindo === me;
+    const linha = el("div", "eq-consulta-linha" + (meu ? " eq-consulta-meu" : ""));
+    linha.append(el("span", "eq-consulta-nome", h.nome));
+
+    let quem;
+    if (h.cobrindo === me) {
+      quem = el("span", "eq-pill eq-pill-cobrindo", `Você, cobrindo ${curto(h.dono)} até ${ddmm(h.fim)}`);
+    } else if (h.dono === me && h.cobrindo) {
+      quem = el("span", "eq-pill eq-pill-fora", `Seu · com ${curto(h.cobrindo)} até ${ddmm(h.fim)}`);
+    } else if (h.dono === me) {
+      quem = el("span", "eq-pill eq-pill-voce", "Você");
+    } else if (h.cobrindo) {
+      quem = el("span", "eq-consulta-quem", `${curto(h.cobrindo)} (cobrindo ${curto(h.dono)} até ${ddmm(h.fim)})`);
+    } else if (h.dono) {
+      quem = el("span", "eq-consulta-quem", curto(h.dono));
+    } else {
+      quem = el("span", "eq-pill eq-pill-sem", "Sem responsável");
+    }
+    linha.append(quem);
+    return linha;
   }
 
   function bloco(titulo, desc, lista, tipo, classeExtra) {
@@ -1152,7 +1281,8 @@
   function prepararModais() {
     document.querySelectorAll(".eq-modal").forEach(m => {
       m.addEventListener("click", e => {
-        if (e.target === m || e.target.closest("[data-fechar]")) fecharModal(m.id);
+        // Só o X / botões [data-fechar] fecham; clique no fundo é ignorado
+        if (e.target.closest("[data-fechar]")) fecharModal(m.id);
       });
     });
     document.addEventListener("keydown", e => {

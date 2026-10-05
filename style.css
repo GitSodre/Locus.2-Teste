@@ -638,6 +638,7 @@ label { font-size: 14px; font-weight: 700; color: var(--texto); }
   font-family: var(--fonte);
   font-size: 15px;
   word-break: normal;
+  white-space: pre-wrap; /* mantém as quebras de linha digitadas com Enter */
   color: var(--texto-2);
 }
 
@@ -1085,12 +1086,13 @@ hr { border: 0; border-top: 1px solid var(--borda); margin: 24px 0; }
 }
 
 /* =================================================================
-   EQUIPE (js/equipe.js)
-   Quadro de responsáveis por hospital. Tudo com prefixo eq-.
+   QUADROS (js/quadro.js): Pré-faturamento e Faturamento
+   Quadro de responsáveis por item. Tudo com prefixo eq-; as seções
+   usam .quadro-secao e o quadro do gestor .quadro-admin.
 ================================================================= */
 
 /* O quadro usa a largura toda, sem o limite de 980px das outras seções */
-.dashboard-container:has(#painelEquipe:not(.secao-inativa)) { max-width: none; }
+.dashboard-container:has(.quadro-secao:not(.secao-inativa)) { max-width: none; }
 
 .eq-acoes { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .eq-acoes .btn-cinza svg { width: 17px; height: 17px; flex: none; }
@@ -1221,37 +1223,37 @@ hr { border: 0; border-top: 1px solid var(--borda); margin: 24px 0; }
   min-height: 420px;
 }
 
-/* Pré-faturamento (admin) no computador: em vez de adivinhar a altura
+/* Quadro do gestor no computador: em vez de adivinhar a altura
    do cabeçalho, a tela vira uma coluna flex da altura da janela e o
    quadro ocupa exatamente o que sobra. Assim a página não ganha barra
    de rolagem vertical; ela só aparece se a janela for baixa demais
    para o quadro mínimo (360px). As colunas continuam rolando por dentro. */
 @media (min-width: 901px) {
-  .dashboard-container:has(#painelEquipe:not(.secao-inativa):not([hidden]) #eqAdmin:not([hidden])) {
+  .dashboard-container:has(.quadro-secao:not(.secao-inativa):not([hidden]) .quadro-admin:not([hidden])) {
     height: 100vh;
     height: 100dvh;
     display: flex;
     flex-direction: column;
     padding-bottom: 24px;
   }
-  .dashboard-container:has(#eqAdmin:not([hidden])) #painelEquipe:not(.secao-inativa) {
+  .dashboard-container .quadro-secao:not(.secao-inativa):has(.quadro-admin:not([hidden])) {
     flex: 1;
     min-height: 0;
     display: flex;
     flex-direction: column;
   }
-  #eqAdmin:not([hidden]) {
+  .quadro-admin:not([hidden]) {
     flex: 1;
     min-height: 0;
     display: flex;
     flex-direction: column;
   }
-  #eqAdmin .eq-quadro {
+  .quadro-admin .eq-quadro {
     flex: 1;
     height: auto;
     min-height: 360px;
   }
-  #eqAdmin .eq-filtros, #eqAdmin .eq-faixa { flex: none; }
+  .quadro-admin .eq-filtros, .quadro-admin .eq-faixa { flex: none; }
 }
 .eq-colunas {
   flex: 1;
@@ -1436,6 +1438,28 @@ hr { border: 0; border-top: 1px solid var(--borda); margin: 24px 0; }
 .eq-info-fora { color: var(--ambar); font-weight: 700; }
 .eq-info-agendado { color: var(--texto-2); }
 .eq-icone { display: inline-flex; flex: none; }
+
+/* Lápis do card (renomear / excluir): só com a edição destravada */
+.eq-card-editar {
+  flex: none;
+  margin: -3px -5px -3px auto;
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: var(--texto-3);
+  background: none;
+  border: 0;
+  border-radius: var(--raio-p);
+  cursor: pointer;
+}
+.eq-card-editar:hover { color: var(--azul-escuro); background: var(--superficie-2); }
+.eq-card-editar:focus-visible { outline: none; box-shadow: var(--foco); }
+.eq-card-editar .eq-icone svg { width: 15px; height: 15px; }
+.eq-editar-botoes #eqEditarExcluir,
+.eq-editar-botoes #fatEditarExcluir { margin-right: auto; }
 .eq-icone svg { width: 13px; height: 13px; }
 
 /* Barra que aparece com hospitais marcados */
@@ -1540,6 +1564,32 @@ hr { border: 0; border-top: 1px solid var(--borda); margin: 24px 0; }
 .eq-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; }
 .eq-bloco-cobertura .eq-card { background: var(--superficie); border-color: #C9D4F5; }
 
+/* Todos os hospitais (somente consulta) */
+.eq-bloco-consulta { background: var(--superficie-2); }
+.eq-consulta-topo { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+.eq-consulta-topo h2 { margin: 0; }
+.eq-selo-consulta { padding: 2px 10px; font-size: 13px; color: var(--cinza); background: var(--cinza-fundo); border-radius: 999px; }
+.eq-consulta-barra { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+.eq-consulta-filtros { display: flex; gap: 8px; flex-wrap: wrap; }
+.eq-consulta-lista { background: var(--superficie); border: 1px solid var(--borda); border-radius: var(--raio-p); }
+.eq-consulta-linha { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 12px; }
+.eq-consulta-linha + .eq-consulta-linha { border-top: 1px solid var(--borda); }
+.eq-consulta-meu .eq-consulta-nome { font-weight: 700; }
+.eq-consulta-nome { min-width: 0; overflow-wrap: anywhere; }
+.eq-consulta-quem { color: var(--texto-2); font-size: 14px; text-align: right; }
+.eq-consulta-vazio { margin: 10px 0 0; color: var(--texto-2); }
+.eq-consulta-lista:empty { display: none; }
+.eq-pill { flex: none; padding: 2px 10px; font-size: 13px; border-radius: 999px; white-space: nowrap; }
+.eq-pill-voce { color: var(--azul-escuro); background: var(--azul-claro); font-weight: 700; }
+.eq-pill-cobrindo { color: var(--ambar); background: var(--ambar-fundo); font-weight: 700; }
+.eq-pill-fora { color: var(--ambar); background: var(--ambar-fundo); }
+.eq-pill-sem { color: var(--cinza); background: var(--cinza-fundo); }
+@media (max-width: 640px) {
+  .eq-consulta-linha { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .eq-consulta-quem { text-align: left; }
+  .eq-pill { white-space: normal; }
+}
+
 @media (max-width: 900px) {
   .eq-busca, .eq-busca input { width: 100%; }
   .eq-quadro { height: auto; flex-direction: column; }
@@ -1561,4 +1611,505 @@ hr { border: 0; border-top: 1px solid var(--borda); margin: 24px 0; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+
+/* =================================================================
+   CALENDÁRIO DE ENTREGA (calendario.js)
+   Só datas, sem status: todos os chips têm a mesma cor e os de dias
+   que já passaram ficam em cinza. Contorno forte = prazo final.
+   No computador a grade ocupa a altura da janela (sem rolar a
+   página); cada dia mostra os chips que cabem e o resto vai para "+N".
+================================================================= */
+.dashboard-container:has(#painelCalendario:not(.secao-inativa):not([hidden])) { max-width: none; }
+
+.cal-acoes { display: flex; gap: 10px; }
+
+.cal-barra { display: flex; align-items: center; gap: 12px 20px; flex-wrap: wrap; margin-bottom: 12px; }
+.cal-btn-lateral { margin-left: auto; }
+.cal-btn-lateral svg { width: 17px; height: 17px; }
+.cal-btn-lateral[aria-expanded="true"] { color: var(--azul-escuro); background: var(--azul-claro); border-color: var(--azul); }
+.cal-mes-nav { display: flex; align-items: center; gap: 8px; }
+.cal-mes-nav .btn-cinza[aria-label] { min-width: 36px; padding: 0; font-size: 20px; line-height: 1; }
+.cal-mes-titulo { min-width: 170px; margin: 0; font-size: 20px; text-align: center; }
+
+.cal-janelas-rotulo { font-size: 14px; }
+
+.cal-corpo { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: start; }
+.cal-corpo-lateral { grid-template-columns: minmax(0, 1fr) 320px; }
+.cal-principal { min-width: 0; }
+
+/* Grade do mês */
+.cal-grade { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.cal-dia-semana { padding: 2px 0 4px; font-size: 13px; font-weight: 700; color: var(--texto-2); text-align: center; text-transform: capitalize; }
+.cal-dia {
+  position: relative;
+  min-width: 0;
+  min-height: 112px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 5px;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-p);
+}
+.cal-dia-vazio { background: transparent; border-color: transparent; }
+.cal-dia-fds { background: var(--cinza-fundo); border-color: var(--cinza-fundo); }
+.cal-dia-fds .cal-dia-num { color: var(--texto-3); }
+.cal-dia-passado .cal-dia-num { color: var(--texto-3); }
+.cal-dia-topo { display: flex; align-items: center; gap: 4px; min-width: 0; padding-right: 24px; }
+.cal-dia-num {
+  flex: none;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 4px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--texto);
+  background: none;
+  border: 0;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+button.cal-dia-num { cursor: pointer; }
+button.cal-dia-num:hover { background: var(--cinza-fundo); }
+.cal-feriado { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 700; color: var(--vermelho); }
+
+/* Hoje: borda e número na cor da marca */
+.cal-dia-hoje { border: 2px solid var(--azul); background: var(--azul-claro); padding: 4px; }
+.cal-dia-hoje .cal-dia-num,
+.cal-dia-hoje button.cal-dia-num:hover { color: #fff; background: var(--azul); }
+.cal-dia-hoje-amostra { display: inline-block; width: 16px; height: 16px; vertical-align: -3px; background: var(--azul-claro); border: 2px solid var(--azul); border-radius: 4px; }
+
+/* Chips */
+.cal-chip {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  padding: 2px 6px;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1.35;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border: 0;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.cal-legenda .cal-chip { display: inline-block; width: auto; cursor: default; }
+.cal-chip { color: var(--azul-escuro); background: var(--azul-claro); }
+.cal-dia-passado .cal-chip { color: var(--texto-2); background: var(--cinza-fundo); }
+.cal-chip[hidden] { display: none; }
+.cal-dia > * { flex-shrink: 0; }  /* não espreme: o que não cabe vai para "+N" */
+.cal-fim { font-weight: 700; box-shadow: inset 0 0 0 1.5px currentColor; }
+.cal-janela { font-weight: 400; opacity: .8; }
+.cal-chip:hover { filter: brightness(.96); }
+.cal-chip:focus-visible, .cal-mais:focus-visible, .cal-dia-num:focus-visible { outline: none; box-shadow: var(--foco); }
+.cal-mais { align-self: flex-start; padding: 0 6px; font: inherit; font-size: 12px; font-weight: 700; color: var(--azul-escuro); background: none; border: 0; cursor: pointer; }
+.cal-mais:hover { text-decoration: underline; }
+.cal-dia-topo .cal-mais { margin-left: auto; padding: 2px 6px; border-radius: 4px; }
+.cal-dia-topo .cal-mais:hover { background: var(--azul-claro); text-decoration: none; }
+
+.cal-legenda { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; margin: 8px 0 0; font-size: 13px; color: var(--texto-2); }
+
+/* "+N" aberto: o dia cresce por cima dos vizinhos com todos os chips */
+.cal-dia-expandido {
+  z-index: 5;
+  align-self: start;
+  height: auto !important;
+  min-height: 100%;
+  overflow: visible !important;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.16);
+}
+
+/* Entrega livre: uma linha curta logo abaixo da grade */
+.cal-livres { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-top: 8px; font-size: 13px; }
+.cal-livres[hidden] { display: none; }
+.cal-livres-rotulo { font-weight: 700; color: var(--texto-2); }
+.cal-livre { display: inline-flex; align-items: baseline; gap: 6px; padding: 2px 8px; font: inherit; font-size: 13px; color: var(--azul-escuro); background: var(--azul-claro); border: 0; border-radius: 4px; cursor: pointer; }
+.cal-livre:hover { filter: brightness(.96); }
+.cal-livre:focus-visible { outline: none; box-shadow: var(--foco); }
+.cal-livre-nome { font-weight: 700; }
+.cal-livre-info { color: var(--texto-2); }
+
+/* Lista lateral de convênios */
+.cal-lateral {
+  position: sticky;
+  top: 24px;
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-m);
+}
+.cal-lateral-topo { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.cal-lateral-titulo { margin: 0; font-size: 17px; }
+.cal-lateral-topo .modal-fechar { margin: 0; }
+.cal-lateral-qtd { font-weight: 400; color: var(--texto-2); }
+.cal-lateral .eq-busca input { width: 100%; }
+.cal-lista-convenios { min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; margin: 0 -4px; padding: 0 4px; }
+.cal-lateral-vazio { margin: 4px 0; font-size: 14px; color: var(--texto-2); }
+.cal-conv { border: 1px solid transparent; border-radius: var(--raio-p); }
+.cal-conv-aberto { border-color: var(--borda); background: var(--superficie-2); }
+.cal-conv-cab { width: 100%; display: flex; align-items: center; gap: 8px; padding: 7px 8px; font: inherit; font-size: 14px; text-align: left; color: var(--texto); background: none; border: 0; border-radius: var(--raio-p); cursor: pointer; }
+.cal-conv-cab:hover { background: var(--superficie-2); }
+.cal-conv-nome { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.cal-conv-seta { flex: none; color: var(--texto-3); }
+.cal-conv-corpo { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 10px; margin: 0; padding: 2px 10px 8px; font-size: 13px; }
+.cal-conv-corpo dt { color: var(--texto-2); }
+.cal-conv-corpo dd { margin: 0; overflow-wrap: anywhere; }
+.cal-conv-acoes { display: flex; gap: 8px; padding: 0 10px 10px; }
+
+/* Modais */
+.cal-rotulo { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 700; color: var(--texto); }
+.cal-empresas-form { display: flex; flex-wrap: wrap; gap: 8px 18px; }
+.cal-tipos { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-bottom: 16px; }
+.cal-tipo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 10px 12px;
+  font: inherit;
+  text-align: left;
+  color: var(--texto);
+  background: var(--superficie);
+  border: 1px solid var(--borda-forte);
+  border-radius: var(--raio-p);
+  cursor: pointer;
+}
+.cal-tipo span { font-size: 13px; color: var(--texto-2); }
+.cal-tipo:hover { border-color: var(--texto-3); }
+.cal-tipo[aria-pressed="true"] { background: var(--azul-claro); border-color: var(--azul); box-shadow: inset 0 0 0 1px var(--azul); }
+.cal-tipo[aria-pressed="true"] strong,
+.cal-tipo[aria-pressed="true"] span { color: var(--azul-escuro); }
+.cal-config { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0 20px; }
+.cal-config .modal-campo-full { grid-column: 1 / -1; }
+.cal-config > .painel-aviso { margin-bottom: 16px; }
+.cal-numero {
+  width: 110px;
+  min-height: 40px;
+  padding: 9px 12px;
+  font: inherit;
+  font-size: 15px;
+  color: var(--texto);
+  background: var(--superficie);
+  border: 1px solid var(--borda-forte);
+  border-radius: var(--raio-p);
+}
+.cal-numero:focus { outline: none; border-color: var(--azul); box-shadow: var(--foco); }
+.cal-previa { padding: 6px 14px; background: var(--superficie-2); border: 1px solid var(--borda); border-radius: var(--raio-p); }
+.cal-previa-linha { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; }
+.cal-previa-linha + .cal-previa-linha { border-top: 1px solid var(--borda); }
+.cal-previa-mes { color: var(--texto-2); }
+.cal-previa-valor { display: flex; flex-direction: column; align-items: flex-end; text-align: right; }
+.cal-previa-nota { font-size: 13px; color: var(--texto-2); }
+.cal-previa-ajuste { color: var(--ambar); }
+.cal-previa-erro { margin: 6px 0; color: var(--vermelho); }
+.cal-conv-botoes #calConvDesativar,
+.cal-conv-botoes #calFerRemover { margin-right: auto; }
+
+.cal-det-lista { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px 16px; margin: 8px 0 0; }
+.cal-det-lista dt { color: var(--texto-2); }
+.cal-det-lista dd { margin: 0; overflow-wrap: anywhere; }
+
+@media (min-width: 901px) {
+  .dashboard-container:has(#painelCalendario:not(.secao-inativa):not([hidden])) {
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    padding-top: 24px;
+    padding-bottom: 16px;
+  }
+  #painelCalendario:not(.secao-inativa) { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+  #painelCalendario .secao-cabecalho { margin-bottom: 12px; }
+  #painelCalendario .cal-barra { flex: none; margin-bottom: 10px; }
+  #painelCalendario .cal-corpo { flex: 1; min-height: 0; grid-template-rows: minmax(0, 1fr); align-items: stretch; }
+  #painelCalendario .cal-principal,
+  #calVistaCalendario { min-height: 0; display: flex; flex-direction: column; }
+  #calVistaCalendario { flex: 1; }
+  #painelCalendario .cal-grade { flex: 1; min-height: 380px; grid-template-rows: auto; grid-auto-rows: minmax(0, 1fr); }
+  #painelCalendario .cal-dia { min-height: 0; overflow: hidden; }
+  #painelCalendario .cal-livres,
+  #painelCalendario .cal-legenda { flex: none; }
+  #painelCalendario .cal-lateral { position: static; max-height: none; min-height: 0; }
+}
+
+@media (max-width: 1100px) {
+  .cal-corpo-lateral { grid-template-columns: minmax(0, 1fr); }
+  .cal-lateral { position: static; max-height: none; }
+  .cal-lista-convenios { max-height: 420px; }
+}
+@media (max-width: 700px) {
+  .cal-dia { min-height: 72px; padding: 3px; }
+  .cal-chip { font-size: 11px; padding: 1px 4px; }
+  .cal-tipos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* =================================================================
+   PERMISSÕES — menu com itens bloqueados e tela de Usuários por nível
+================================================================= */
+.nav-item.nav-bloqueado { color: rgba(174, 184, 214, 0.45); cursor: not-allowed; }
+.nav-item.nav-bloqueado:hover { background: transparent; color: rgba(174, 184, 214, 0.55); }
+.nav-item > span:not(.nav-badge) { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nav-item.nav-bloqueado:hover::after {
+  content: "Sem acesso";
+  flex: none;
+  margin-left: auto;
+  padding: 1px 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--tinta-texto);
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.sem-acesso-geral { padding: 8px 0 24px; }
+.sem-acesso-geral .painel-aviso { margin-top: 6px; }
+
+/* Usuários: uma linha por pessoa, uma coluna por módulo */
+.lista-usuarios .usuario-cabecalho,
+.lista-usuarios .usuario-linha {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) repeat(4, 160px) 130px;
+  gap: 12px;
+  align-items: center;
+}
+.usuario-cabecalho {
+  padding: 10px 24px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--texto-2);
+  background: var(--superficie-2);
+  border-bottom: 1px solid var(--borda);
+}
+.lista-usuarios .usuario-cabecalho + .usuario-linha { border-top: 0; }
+.usuario-email { min-width: 0; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; overflow-wrap: anywhere; }
+.usuario-tag { padding: 1px 8px; font-size: 12px; color: var(--azul-escuro); background: var(--azul-claro); border-radius: 999px; }
+.usuario-tag-pendente { color: var(--ambar); background: var(--ambar-fundo); }
+.usuario-nivel { display: flex; flex-direction: column; gap: 4px; margin: 0; font-weight: 400; }
+.usuario-nivel-rotulo { display: none; font-size: 12px; font-weight: 700; color: var(--texto-2); }
+.select-nivel { min-height: 36px; padding: 6px 10px; font-size: 14px; }
+.select-nivel.nivel-sem { color: var(--texto-3); }
+.select-nivel.nivel-operador { color: var(--azul-escuro); }
+.select-nivel.nivel-gestor { color: var(--azul-escuro); font-weight: 700; }
+.select-nivel:disabled { opacity: .6; cursor: progress; }
+.usuario-admin { justify-self: start; }
+
+@media (max-width: 1200px) {
+  .lista-usuarios .usuario-cabecalho { display: none; }
+  .lista-usuarios .usuario-linha { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .lista-usuarios .usuario-linha .usuario-email,
+  .lista-usuarios .usuario-linha .usuario-admin { grid-column: 1 / -1; }
+  .usuario-nivel-rotulo { display: block; }
+}
+@media (max-width: 800px) {
+  .lista-usuarios .usuario-linha { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 480px) {
+  .lista-usuarios .usuario-linha { grid-template-columns: minmax(0, 1fr); }
+}
+.dashboard-container:has(#painelUsuarios:not(.secao-inativa):not([hidden])) { max-width: 1320px; }
+
+/* Calendário: observações do dia e ajuste pontual */
+.cal-dia-add {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--azul-escuro);
+  background: var(--superficie);
+  border: 1px solid var(--borda-forte);
+  border-radius: 5px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity .12s ease;
+}
+.cal-dia:hover .cal-dia-add,
+.cal-dia-add:focus-visible { opacity: 1; }
+.cal-dia-add:hover { background: var(--azul-claro); border-color: var(--azul); }
+.cal-dia-add:focus-visible { outline: none; box-shadow: var(--foco); }
+@media (hover: none) { .cal-dia-add { opacity: .7; } }
+
+.cal-obs-ind {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 1px 4px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ambar);
+  background: var(--ambar-fundo);
+  border: 0;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.cal-obs-ind:hover { filter: brightness(.96); }
+.cal-obs-ind:focus-visible { outline: none; box-shadow: var(--foco); }
+.cal-obs-ind-sem { color: var(--vermelho); background: var(--vermelho-fundo); }
+.cal-icone { display: inline-flex; }
+.cal-icone svg { width: 13px; height: 13px; }
+.cal-obs-amostra { display: inline-block; width: 18px; height: 14px; vertical-align: -2px; background: var(--ambar-fundo); border-radius: 4px; box-shadow: inset 0 0 0 1px var(--ambar-borda); }
+.cal-ajustado { text-decoration: underline dotted; text-underline-offset: 2px; }
+
+.cal-obs-lista { display: flex; flex-direction: column; margin: 4px 0 8px; }
+.cal-obs-vazio { margin: 4px 0 12px; }
+.cal-obs-item { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 12px 0; }
+.cal-obs-item + .cal-obs-item { border-top: 1px solid var(--borda); }
+.cal-obs-corpo { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+.cal-obs-texto { margin: 0; font-size: 15px; overflow-wrap: anywhere; white-space: pre-wrap; }
+.cal-obs-meta { font-size: 13px; color: var(--texto-2); }
+.cal-obs-tag { padding: 1px 8px; font-size: 12px; font-weight: 700; color: var(--vermelho); background: var(--vermelho-fundo); border-radius: 999px; }
+.cal-obs-form { padding-top: 12px; border-top: 1px solid var(--borda); }
+.cal-obs-form .checkbox-label { font-weight: 400; }
+.cal-obs-dica { font-size: 13px; }
+
+.cal-det-ajustado { color: var(--azul-escuro); font-weight: 700; }
+.cal-det-ajuste { margin-top: 18px; padding: 14px 16px; background: var(--superficie-2); border: 1px solid var(--borda); border-radius: var(--raio-p); }
+.cal-det-ajuste h3 { margin: 0 0 4px; font-size: 15px; }
+.cal-det-ajuste .painel-aviso { margin-bottom: 12px; font-size: 13px; }
+.cal-ajuste-botoes,
+.cal-ajuste-data { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 10px; }
+.cal-ajuste-campo { width: 170px; min-height: 32px; padding: 4px 10px; font-size: 14px; }
+.cal-ajuste-motivo { width: 100%; min-height: 36px; padding: 6px 10px; font: inherit; font-size: 14px; color: var(--texto); background: var(--superficie); border: 1px solid var(--borda-forte); border-radius: var(--raio-p); }
+.cal-ajuste-motivo:focus { outline: none; border-color: var(--azul); box-shadow: var(--foco); }
+.cal-ajuste-voltar { margin-top: 10px; }
+
+/* =================================================================
+   VÍNCULO FATURAMENTO ↔ CALENDÁRIO
+   ================================================================= */
+/* Card do Faturamento: clique mostra a agenda e o atalho */
+.eq-card-clicavel { cursor: pointer; }
+.eq-card-clicavel[draggable="true"] { cursor: grab; }
+.eq-card-clicavel:hover { border-color: var(--borda-forte); }
+.eq-card-clicavel:focus-visible { outline: none; box-shadow: var(--foco); }
+.eq-info-agenda { color: var(--azul-escuro); }
+.eq-info-sem-agenda { color: var(--texto-3); }
+
+/* Coluna da direita do card: lápis e, abaixo, o ícone do calendário */
+.eq-card-acoes {
+  flex: none;
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.eq-card-acoes .eq-card-editar { margin: -3px -5px 0; }
+.eq-card-agenda-ico { display: inline-flex; align-items: center; justify-content: center; width: 16px; }
+.eq-card-agenda-ico .eq-icone svg { width: 15px; height: 15px; }
+
+/* Siglas das empresas sob o nome do convênio */
+.eq-card-empresas { font-size: 11px; font-weight: 700; letter-spacing: .04em; color: var(--texto-2); }
+
+/* Seleção das empresas (criar / editar convênio) */
+.fat-empresas { display: flex; gap: 8px; flex-wrap: wrap; }
+.fat-empresa {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px; font-weight: 600; cursor: pointer;
+  border: 1px solid var(--borda-forte); border-radius: var(--raio-p);
+}
+.fat-empresa input { accent-color: var(--azul); }
+
+/* Lista de consulta: o nome vira botão */
+.eq-link-nome {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+.eq-link-nome:hover > span:first-child { color: var(--azul); text-decoration: underline; }
+.eq-link-nome:focus-visible { outline: none; box-shadow: var(--foco); border-radius: 4px; }
+.eq-consulta-agenda { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 400; color: var(--azul-escuro); }
+
+.fat-agenda-dica { margin-top: 6px; font-size: 13px; }
+#fatTagCorpo { margin: 4px 0 18px; }
+.eq-editar-botoes #fatTagEditar { margin-right: auto; }
+
+/* Calendário: excluir no detalhe e destaque vindo do Faturamento */
+.cal-det-excluir { margin-right: auto; }
+.cal-chip.cal-destaque,
+.cal-livre.cal-destaque { animation: cal-destaque 1s ease-in-out 3; box-shadow: 0 0 0 2px var(--ambar-borda); }
+@keyframes cal-destaque {
+  50% { box-shadow: 0 0 0 4px var(--ambar-borda); background: var(--ambar-fundo); color: var(--ambar); }
+}
+
+/* =================================================================
+   IMPRIMIR / PDF (quadro.js · imprimir)
+   O relatório fica num bloco próprio no fim do body. Só aparece na
+   impressão, e só quando veio do botão "Imprimir / PDF" (body.imprimindo);
+   um Ctrl+P comum continua imprimindo a tela como sempre.
+================================================================= */
+.relatorio { display: none; }
+
+@media print {
+  @page { size: A4; margin: 14mm 12mm; }
+
+  body.imprimindo { display: block !important; background: #fff; }
+  body.imprimindo > :not(.relatorio) { display: none !important; }
+  body.imprimindo .relatorio { display: block; }
+
+  .relatorio {
+    font-family: var(--fonte);
+    font-size: 10.5pt;
+    color: #000;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .rel-cab { border-bottom: 2px solid var(--tinta); padding-bottom: 6pt; margin-bottom: 10pt; }
+  .rel-modulo { margin: 0; font-size: 9pt; color: var(--texto-2); text-transform: uppercase; letter-spacing: .04em; }
+  .rel-cab h1 { margin: 2pt 0; font-size: 17pt; color: var(--tinta); }
+  .rel-gerado { margin: 0; font-size: 9pt; color: var(--texto-2); }
+
+  .rel-resumo { display: flex; gap: 6pt; margin-bottom: 12pt; }
+  .rel-resumo-item { flex: 1; border: 1px solid var(--borda-forte); border-radius: 4pt; padding: 4pt 6pt; }
+  .rel-resumo-item strong { display: block; font-size: 14pt; }
+  .rel-resumo-item span { font-size: 8.5pt; color: var(--texto-2); }
+
+  .rel-bloco { margin-bottom: 12pt; }
+  .rel-h2 { font-size: 13pt; color: var(--tinta); margin: 10pt 0 6pt; border-bottom: 1px solid var(--borda-forte); padding-bottom: 2pt; break-after: avoid; }
+
+  .rel-pessoa, .rel-ausencia { break-inside: avoid; margin-bottom: 10pt; }
+  .rel-pessoa-cab, .rel-ausencia-cab { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6pt; }
+  .rel-pessoa h3, .rel-ausencia h3 { margin: 0; font-size: 12pt; }
+  .rel-pessoa h4 { margin: 6pt 0 3pt; font-size: 10pt; color: var(--texto-2); }
+  .rel-email { font-size: 9pt; color: var(--texto-2); }
+  .rel-selo { font-size: 8.5pt; font-weight: 700; padding: 1pt 5pt; border-radius: 3pt; background: var(--ambar-fundo); color: var(--ambar); border: 1px solid var(--ambar-borda); }
+  .rel-selo-agendado { background: var(--cinza-fundo); color: var(--cinza); border-color: var(--borda-forte); }
+  .rel-nota { margin: 2pt 0 4pt; font-size: 9pt; color: var(--texto-2); }
+  .rel-vazio { font-style: italic; color: var(--texto-2); }
+
+  .rel-tabela { width: 100%; border-collapse: collapse; font-size: 9.5pt; }
+  .rel-tabela th, .rel-tabela td { border: 1px solid var(--borda-forte); padding: 3pt 5pt; text-align: left; vertical-align: top; }
+  .rel-tabela th { background: var(--superficie-2); font-size: 8.5pt; text-transform: uppercase; letter-spacing: .03em; }
+  .rel-tabela thead { display: table-header-group; }
+  .rel-tabela tr { break-inside: avoid; }
+  .rel-tabela tr.rel-destaque td { background: var(--ambar-fundo); }
+  .rel-tabela tr.rel-alerta td { background: var(--vermelho-fundo); color: var(--vermelho); font-weight: 700; }
 }

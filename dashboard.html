@@ -22,22 +22,32 @@
     <a href="#secaoConvenios" class="logo" aria-label="Locus, início">Locus<span class="logo-ponto">.</span></a>
 
     <nav class="sidebar-nav" aria-label="Seções">
-      <a href="#secaoConvenios" class="nav-item ativo">
+      <!-- Todos os itens aparecem sempre. Sem permissão, o layout.js marca
+           o item como bloqueado (.nav-bloqueado) e ele mostra "Sem acesso". -->
+      <a href="#secaoConvenios" id="navConvenios" class="nav-item ativo">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        Convênios
+        <span>Convênios (senhas)</span>
       </a>
-      <a href="#painelChamados" id="navChamados" class="nav-item" hidden>
+      <a href="#painelEquipe" id="navEquipe" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><circle cx="12" cy="11" r="2.5"/><path d="M8 17.5a4 4 0 0 1 8 0"/></svg>
+        <span id="navEquipeTexto">Pré-faturamento</span>
+      </a>
+      <a href="#painelFaturamento" id="navFaturamento" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M9 12h7M9 16h5"/></svg>
+        <span>Faturamento</span>
+      </a>
+      <a href="#painelCalendario" id="navCalendario" class="nav-item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M9 14.5l2 2 4-4"/></svg>
+        <span>Calendário de entrega</span>
+      </a>
+      <a href="#painelChamados" id="navChamados" class="nav-item">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H8l-4 4z"/><path d="M8 9h8M8 12h5"/></svg>
         <span id="navChamadosTexto">Chamados</span>
         <span id="navBadgeChamados" class="nav-badge" hidden></span>
       </a>
-      <a href="#painelEquipe" id="navEquipe" class="nav-item" hidden>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><circle cx="12" cy="11" r="2.5"/><path d="M8 17.5a4 4 0 0 1 8 0"/></svg>
-        <span id="navEquipeTexto">Pré-faturamento</span>
-      </a>
-      <a href="#painelUsuarios" id="navUsuarios" class="nav-item" hidden>
+      <a href="#painelUsuarios" id="navUsuarios" class="nav-item">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18.5 20a6.5 6.5 0 0 0-3-5.5"/></svg>
-        Usuários
+        <span>Usuários</span>
       </a>
     </nav>
 
@@ -47,7 +57,7 @@
         <span id="usuarioLogado" class="usuario-logado"></span>
         <span id="papelUsuario" class="usuario-papel"></span>
       </div>
-      <button type="button" class="btn-sair" onclick="logout()">Sair</button>
+      <button type="button" id="btnSair" class="btn-sair">Sair</button>
     </div>
   </aside>
 
@@ -59,7 +69,7 @@
     <section id="secaoConvenios" class="secao" aria-labelledby="tituloConvenios">
       <header class="secao-cabecalho">
         <div>
-          <h1 id="tituloConvenios" class="secao-titulo">Convênios</h1>
+          <h1 id="tituloConvenios" class="secao-titulo">Convênios (senhas)</h1>
           <p id="cadastroDica" class="painel-aviso cadastro-dica">
             Tem um login de convênio que ainda não está no Locus? Envie para aprovação.
           </p>
@@ -170,12 +180,13 @@
     </details>
 
     <!-- ============================================================
-         PRÉ-FATURAMENTO — quem responde por cada hospital (js/equipe.js)
-         Os ids e arquivos continuam "equipe"/"eq" por compatibilidade.
-         Admin  : quadro com uma coluna por pessoa, arrastar e soltar.
+         PRÉ-FATURAMENTO — quem responde por cada hospital (js/quadro.js)
+         Os ids continuam "equipe"/"eq" por compatibilidade.
+         Gestor : quadro com uma coluna por pessoa, arrastar e soltar,
+                  e "+ Criar instituição".
          Usuário: só os hospitais dele.
     ============================================================= -->
-    <section id="painelEquipe" class="secao secao-inativa" aria-labelledby="tituloEquipe" hidden>
+    <section id="painelEquipe" class="secao secao-inativa quadro-secao" aria-labelledby="tituloEquipe" hidden>
       <header class="secao-cabecalho">
         <div>
           <h1 id="tituloEquipe" class="secao-titulo">Pré-faturamento</h1>
@@ -187,9 +198,14 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
             <input type="search" id="eqBusca" name="busca-hospital" placeholder="Buscar hospital…" autocomplete="off" spellcheck="false" data-1p-ignore data-lpignore="true">
           </label>
+          <button type="button" id="eqBtnCriar" class="btn-verde">+ Criar instituição</button>
           <button type="button" id="eqBtnAusencia" class="btn-cinza" disabled>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
             Registrar ausência
+          </button>
+          <button type="button" id="eqBtnImprimir" class="btn-cinza" title="Lista para imprimir ou salvar em PDF">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 9V3.5h10V9"/><rect x="3.5" y="9" width="17" height="8" rx="2"/><path d="M7 14h10v6.5H7z"/></svg>
+            Imprimir / PDF
           </button>
           <button type="button" id="eqCadeado" class="btn-cinza eq-cadeado" aria-pressed="false">
             <svg class="ic-fechado" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
@@ -200,7 +216,7 @@
         </div>
       </header>
 
-      <div id="eqAdmin" hidden>
+      <div id="eqAdmin" class="quadro-admin" hidden>
         <div class="eq-filtros" role="group" aria-label="Filtrar hospitais">
           <button type="button" class="eq-filtro" data-filtro="todos" aria-pressed="true">Todos · <span class="eq-filtro-qtd">0</span></button>
           <button type="button" class="eq-filtro" data-filtro="cobertura" aria-pressed="false">Em cobertura · <span class="eq-filtro-qtd">0</span></button>
@@ -256,6 +272,161 @@
     </section>
 
     <!-- ============================================================
+         FATURAMENTO — quem faz cada convênio (js/quadro.js)
+         Mesmo quadro do Pré-faturamento, com convênios de nome livre
+         (ex.: "AMIL (Clínica)"). Independente do Calendário de entrega.
+         Gestor : arrasta, transfere (permanente/temporário) e cria convênios.
+         Outros : só visualizam.
+    ============================================================= -->
+    <section id="painelFaturamento" class="secao secao-inativa quadro-secao" aria-labelledby="tituloFaturamento" hidden>
+      <header class="secao-cabecalho">
+        <div>
+          <h1 id="tituloFaturamento" class="secao-titulo">Faturamento</h1>
+          <p id="fatSubtitulo" class="painel-aviso"></p>
+        </div>
+        <div id="fatAcoesAdmin" class="eq-acoes" hidden>
+          <label class="eq-busca">
+            <span class="visualmente-oculto">Buscar convênio</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
+            <input type="search" id="fatBusca" name="busca-convenio-fat" placeholder="Buscar convênio…" autocomplete="off" spellcheck="false" data-1p-ignore data-lpignore="true">
+          </label>
+          <button type="button" id="fatBtnCriar" class="btn-verde">+ Criar convênio</button>
+          <button type="button" id="fatBtnAusencia" class="btn-cinza" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
+            Registrar ausência
+          </button>
+          <button type="button" id="fatBtnImprimir" class="btn-cinza" title="Lista para imprimir ou salvar em PDF">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 9V3.5h10V9"/><rect x="3.5" y="9" width="17" height="8" rx="2"/><path d="M7 14h10v6.5H7z"/></svg>
+            Imprimir / PDF
+          </button>
+          <button type="button" id="fatCadeado" class="btn-cinza eq-cadeado" aria-pressed="false">
+            <svg class="ic-fechado" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+            <svg class="ic-aberto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.6-1.8"/></svg>
+            <span id="fatCadeadoTexto">Edição travada</span>
+            <span id="fatCadeadoResto" class="eq-cadeado-resto" hidden></span>
+          </button>
+        </div>
+      </header>
+
+      <div id="fatAdmin" class="quadro-admin" hidden>
+        <div class="eq-filtros" role="group" aria-label="Filtrar convênios">
+          <button type="button" class="eq-filtro" data-filtro="todos" aria-pressed="true">Todos · <span class="eq-filtro-qtd">0</span></button>
+          <button type="button" class="eq-filtro" data-filtro="cobertura" aria-pressed="false">Em cobertura · <span class="eq-filtro-qtd">0</span></button>
+          <button type="button" class="eq-filtro" data-filtro="sem" aria-pressed="false">Sem responsável · <span class="eq-filtro-qtd">0</span></button>
+
+          <!-- Quais colunas de pessoas aparecem (só muda a visualização) -->
+          <details id="fatPessoas" class="eq-pessoas">
+            <summary class="eq-filtro eq-pessoas-botao">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M21.5 20a6.5 6.5 0 0 0-4-6"/></svg>
+              Pessoas · <span id="fatPessoasQtd">0</span>
+            </summary>
+            <div class="eq-pessoas-menu">
+              <label class="eq-busca eq-pessoas-busca">
+                <span class="visualmente-oculto">Buscar pessoa</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
+                <input type="search" id="fatPessoasBusca" name="busca-pessoa-fat" placeholder="Buscar pessoa…" autocomplete="off" autocapitalize="off" spellcheck="false" data-1p-ignore data-lpignore="true">
+              </label>
+              <div class="eq-pessoas-atalhos">
+                <button type="button" id="fatPessoasTodas" class="eq-link">Marcar todas</button>
+                <button type="button" id="fatPessoasNenhuma" class="eq-link">Desmarcar todas</button>
+              </div>
+              <div id="fatPessoasLista" class="eq-pessoas-lista" role="group" aria-label="Pessoas visíveis no quadro"></div>
+              <p id="fatPessoasVazio" class="eq-pessoas-vazio" hidden>Ninguém com esse nome.</p>
+            </div>
+          </details>
+        </div>
+
+        <!-- Faixa de destinos: recolhida; abre ao passar um card arrastado por cima dela -->
+        <div class="eq-faixa">
+          <button type="button" id="fatFaixaToggle" class="eq-faixa-toggle" aria-expanded="false" aria-controls="fatFaixaDestinos" aria-label="Abrir a faixa de destinos">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+            Soltar em uma pessoa
+            <span class="eq-faixa-dica">· arraste um card até aqui para abrir</span>
+          </button>
+          <div id="fatFaixaDestinos" class="eq-faixa-destinos" hidden></div>
+        </div>
+
+        <div class="eq-quadro">
+          <section id="fatSemResp" class="eq-col eq-col-sem" data-destino="" aria-label="Sem responsável"></section>
+          <div id="fatColunas" class="eq-colunas"></div>
+        </div>
+
+        <div id="fatBarraSelecao" class="eq-barra-selecao" hidden>
+          <span id="fatSelTexto"></span>
+          <label class="visualmente-oculto" for="fatSelDestino">Mover selecionados para</label>
+          <select id="fatSelDestino"></select>
+          <button type="button" id="fatSelLimpar" class="btn-cinza btn-small">Limpar seleção</button>
+        </div>
+      </div>
+
+      <div id="fatUsuario" class="eq-usuario" hidden></div>
+      <p id="fatMsg" class="msg-feedback erro" role="alert"></p>
+    </section>
+
+    <!-- ============================================================
+         CALENDÁRIO DE ENTREGA (calendario.js)
+         Só as datas de entrega, um convênio por nome. Todos veem;
+         Operador e Gestor criam convênios, transferem prazos e
+         lançam observações.
+    ============================================================= -->
+    <section id="painelCalendario" class="secao secao-inativa" aria-labelledby="tituloCalendario" hidden>
+      <header class="secao-cabecalho">
+        <div>
+          <h1 id="tituloCalendario" class="secao-titulo">Calendário de entrega</h1>
+          <p id="calSubtitulo" class="painel-aviso"></p>
+        </div>
+        <div class="cal-acoes">
+          <button type="button" id="calBtnNovo" class="btn-verde btn-small" hidden>+ Novo convênio</button>
+        </div>
+      </header>
+
+      <div class="cal-barra">
+        <div class="cal-mes-nav">
+          <button type="button" id="calMesAnterior" class="btn-cinza btn-small" aria-label="Mês anterior">&lsaquo;</button>
+          <h2 id="calMesTitulo" class="cal-mes-titulo" aria-live="polite"></h2>
+          <button type="button" id="calMesProximo" class="btn-cinza btn-small" aria-label="Próximo mês">&rsaquo;</button>
+          <button type="button" id="calMesHoje" class="btn-cinza btn-small">Hoje</button>
+        </div>
+        <label class="usuario-equipe cal-janelas-rotulo" title="Mostra os dias em que a entrega já pode ser feita, e não só o prazo final"><input type="checkbox" id="calJanelas" checked> Mostrar janelas</label>
+        <button type="button" id="calBtnLateral" class="btn-cinza btn-small cal-btn-lateral" aria-expanded="false" aria-controls="calLateral">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/></svg>
+          Lista de convênios
+        </button>
+      </div>
+
+      <div id="calCorpo" class="cal-corpo">
+        <div class="cal-principal">
+          <div id="calVistaCalendario">
+            <div id="calGrade" class="cal-grade"></div>
+            <div id="calLivres" class="cal-livres" hidden></div>
+            <div class="cal-legenda">
+              <span><span class="cal-chip cal-fim">Convênio</span> prazo final</span>
+              <span><span class="cal-chip cal-janela">Convênio</span> dentro do período</span>
+              <span><span class="cal-chip cal-fim cal-ajustado">&#8635; Convênio</span> prazo transferido só neste mês</span>
+              <span><span class="cal-obs-amostra" aria-hidden="true"></span> observação no dia</span>
+              <span><span class="cal-dia-hoje-amostra"></span> hoje</span>
+            </div>
+          </div>
+        </div>
+
+        <aside id="calLateral" class="cal-lateral" aria-label="Lista de convênios" hidden>
+          <div class="cal-lateral-topo">
+            <h2 class="cal-lateral-titulo">Convênios <span id="calLateralQtd" class="cal-lateral-qtd"></span></h2>
+            <button type="button" id="calLateralFechar" class="modal-fechar" aria-label="Fechar a lista de convênios">&times;</button>
+          </div>
+          <label class="eq-busca">
+            <span class="visualmente-oculto">Buscar convênio</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>
+            <input type="search" id="calBuscaConvenio" name="busca-convenio-calendario" placeholder="Buscar convênio…" autocomplete="off" spellcheck="false" data-1p-ignore data-lpignore="true">
+          </label>
+          <div id="calListaConvenios" class="cal-lista-convenios"></div>
+        </aside>
+      </div>
+
+      <p id="calMsg" class="msg-feedback erro" role="alert"></p>
+    </section>
+
+    <!-- ============================================================
          GERENCIAR USUÁRIOS (recolhível) — só admin
     ============================================================= -->
     <details id="painelUsuarios" class="painel-admin secao secao-inativa" open hidden>
@@ -265,7 +436,7 @@
 
       <div class="painel-corpo">
         <p class="painel-aviso">
-          Admin acessa os painéis administrativos; Usuário consulta os convênios e abre chamados. Marque “Pré-faturamento” para quem responde por hospitais: só essas pessoas ganham coluna na aba Pré-faturamento.
+          Cada pessoa tem um nível em cada módulo. <strong>Consulta</strong> só vê; <strong>Operador</strong> faz o trabalho do dia a dia (no Pré-faturamento recebe hospitais; no Calendário é o faturista); <strong>Gestor</strong> configura e corrige. <strong>Administrador</strong> tem acesso total e é o único que gerencia usuários.
         </p>
         <div class="usuarios-busca">
           <label class="eq-busca">
@@ -577,7 +748,7 @@
   </div>
 
   <!-- ============================================================
-       MODAIS DO PRÉ-FATURAMENTO (js/equipe.js)
+       MODAIS DO PRÉ-FATURAMENTO (js/quadro.js)
   ============================================================= -->
   <div id="eqModalMover" class="modal-overlay eq-modal" hidden>
     <div class="modal-card modal-card-largo" role="dialog" aria-modal="true" aria-labelledby="eqMoverTitulo">
@@ -675,6 +846,31 @@
     </div>
   </div>
 
+  <div id="eqModalImprimir" class="modal-overlay eq-modal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="eqImpTitulo">
+      <div class="modal-header">
+        <h2 id="eqImpTitulo">Imprimir distribuição</h2>
+        <button type="button" class="modal-fechar" data-fechar aria-label="Fechar">&times;</button>
+      </div>
+      <p class="painel-aviso">Abre a impressão do navegador. Para gerar o arquivo, escolha <strong>Salvar como PDF</strong> no destino.</p>
+      <fieldset class="eq-opcoes">
+        <legend>O que imprimir</legend>
+        <label class="eq-opcao eq-opcao-rotulo"><input type="radio" name="eqImpModo" value="geral" checked> <strong>Organização geral</strong> · todas as pessoas e seus hospitais</label>
+        <label class="eq-opcao eq-opcao-rotulo"><input type="radio" name="eqImpModo" value="ausencias"> <strong>Ausências e redistribuição</strong> · quem está fora e com quem ficou cada hospital</label>
+        <div class="eq-opcao eq-opcao-linha">
+          <label class="eq-opcao-rotulo"><input type="radio" name="eqImpModo" value="pessoa"> <strong>Uma pessoa</strong></label>
+          <label class="visualmente-oculto" for="eqImpPessoa">Pessoa</label>
+          <select id="eqImpPessoa"></select>
+        </div>
+      </fieldset>
+      <div class="modal-botoes">
+        <button type="button" class="btn-cinza" data-fechar>Cancelar</button>
+        <button type="button" id="eqImpConfirmar" class="btn-primario">Imprimir / PDF</button>
+      </div>
+      <p id="eqImpMsg" class="msg-feedback erro" role="alert"></p>
+    </div>
+  </div>
+
   <div id="eqModalConfirmar" class="modal-overlay eq-modal" hidden>
     <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="eqConfTitulo">
       <div class="modal-header">
@@ -691,7 +887,373 @@
     </div>
   </div>
 
+  <div id="eqModalCriar" class="modal-overlay eq-modal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="eqCriarTitulo">
+      <div class="modal-header">
+        <h2 id="eqCriarTitulo">Nova instituição</h2>
+        <button type="button" class="modal-fechar" data-fechar aria-label="Fechar">&times;</button>
+      </div>
+      <p class="painel-aviso">Sem responsável, ela entra na caixa Sem responsável e pode ser arrastada depois.</p>
+      <div class="modal-campo">
+        <label for="eqCriarNome">Nome da instituição</label>
+        <input type="text" id="eqCriarNome" autocomplete="off" spellcheck="false" placeholder="Hospital São Lucas" data-1p-ignore data-lpignore="true">
+      </div>
+      <div class="modal-campo">
+        <label for="eqCriarResp">Responsável</label>
+        <select id="eqCriarResp"></select>
+      </div>
+      <div class="modal-botoes">
+        <button type="button" class="btn-cinza" data-fechar>Cancelar</button>
+        <button type="button" id="eqCriarConfirmar" class="btn-primario">Criar instituição</button>
+      </div>
+      <p id="eqCriarMsg" class="msg-feedback erro" role="alert"></p>
+    </div>
+  </div>
+
+  <div id="eqModalEditar" class="modal-overlay eq-modal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="eqEditarTitulo">
+      <div class="modal-header">
+        <h2 id="eqEditarTitulo">Editar instituição</h2>
+        <button type="button" class="modal-fechar" data-fechar aria-label="Fechar">&times;</button>
+      </div>
+      <div class="modal-campo">
+        <label for="eqEditarNome">Nome da instituição</label>
+        <input type="text" id="eqEditarNome" autocomplete="off" spellcheck="false" data-1p-ignore data-lpignore="true">
+      </div>
+      <p class="painel-aviso">Mudar o nome não muda o responsável. Excluir tira a instituição do quadro.</p>
+      <div class="modal-botoes eq-editar-botoes">
+        <button type="button" id="eqEditarExcluir" class="btn-vermelho">Excluir</button>
+        <button type="button" class="btn-cinza" data-fechar>Cancelar</button>
+        <button type="button" id="eqEditarSalvar" class="btn-primario">Salvar nome</button>
+      </div>
+      <p id="eqEditarMsg" class="msg-feedback erro" role="alert"></p>
+    </div>
+  </div>
+
   <div id="eqAviso" class="aviso-atualizacao" role="status" aria-live="polite" hidden></div>
+
+  <!-- ============================================================
+       MODAIS DO FATURAMENTO (js/quadro.js)
+  ============================================================= -->
+  <div id="fatModalMover" class="modal-overlay eq-modal" hidden>
+    <div class="modal-card modal-card-largo" role="dialog" aria-modal="true" aria-labelledby="fatMoverTitulo">
+      <div class="modal-header">
+        <h2 id="fatMoverTitulo">Mover convênio</h2>
+        <button type="button" class="modal-fechar" data-fechar aria-label="Fechar">&times;</button>
+      </div>
+      <ul id="fatMoverLista" class="eq-lista-nomes"></ul>
+      <p id="fatMoverRota" class="eq-rota"></p>
+
+      <fieldset id="fatOpcoesTipo" class="eq-opcoes">
+        <legend>Tipo de mudança</legend>
+        <label class="eq-opcao">
+          <input type="radio" name="fatTipo" value="permanente">
+          <span><strong>Permanente</strong><span id="fatTxtPermanente" class="eq-opcao-desc"></span></span>
+        </label>
+        <label class="eq-opcao">
+          <input type="radio" name="fatTipo" value="temporario" id="fatTipoTemp">
+          <span><strong>Temporário</strong><span id="fatTxtTemporario" class="eq-opcao-desc"></span></span>
+        </label>
+      </fieldset>
+      <p id="fatMoverSemResp" class="painel-aviso eq-espaco" hidden></p>
+
+      <div id="fatMoverDatas" class="eq-datas" hidden>
+        <label>De <input type="date" id="fatMoverInicio"></label>
+        <label>Até <input type="date" id="fatMoverFim"></label>
+        <label>Motivo <select id="fatMoverMotivo"></select></label>
+      </div>
+      <p id="fatMoverDica" class="eq-dica" hidden></p>
+
+      <div class="modal-botoes">
+        <button type="button" class="btn-cinza" data-fechar>Cancelar</button>
+        <button type="button" id="fatMoverConfirmar" class="btn-primario">Confirmar</button>
+      </div>
+      <p id="fatMoverMsg" class="msg-feedback erro" role="alert"></p>
+    </div>
+  </div>
+
+  <div id="fatModalDestravar" class="modal-overlay eq-modal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="fatPinTitulo">
+      <div class="modal-header">
+        <h2 id="fatPinTitulo">Destravar edição</h2>
+        <button type="button" class="modal-fechar" data-fechar aria-label="Fechar">&times;</button>
+      </div>
+      <p class="painel-aviso">Digite sua senha de 6 números. A edição trava de novo após 5 minutos sem uso.</p>
+      <!-- Form próprio com o email escondido: sem isso o gerenciador de
+           senhas do Chrome "adivinha" o campo de usuário e joga o email
+           em outro campo da página (ex.: a busca de usuários). -->
+      <form id="fatPinForm" class="eq-pin-form" novalidate>
+        <input type="email" id="fatPinUsuario" name="username" autocomplete="username" hidden tabindex="-1" aria-hidden="true">
+        <div class="modal-campo">
+          <label for="fatPin">Sua senha</label>
+          <input type="password" id="fatPin" name="password" class="eq-pin" inputmode="numeric" maxlength="6" autocomplete="current-password">
+        </div>
+        <div class="modal-botoes">
+          <button type="button" class="btn-cinza" data-fechar>Cancelar</button>
+          <button type="button" id="fatPinConfirmar" class="btn-primario">Destravar</button>
+        </div>
+      </form>
+      <p id="fatPinMsg" class="msg-feedback erro" role="alert"></p>
+    </div>
+  </div>
+
+  <div id="fatModalAusencia" class="modal-overlay eq-modal" hidden>
+    <div class="modal-card modal-card-largo" role="dialog" aria-modal="true" aria-labelledby="fatAusTitulo">
+      <div class="modal-header">
+        <h2 id="fatAusTitulo">Registrar ausência</h2>
+        <button type="button" class="modal-fechar" data-fechar aria-label="Fechar">&times;</button>
+      </div>
+      <p class="painel-aviso">Os convênios da pessoa passam para quem cobrir e voltam sozinhos no fim do período.</p>
+      <div class="modal-campo">
+        <label for="fatAusPessoa">Quem vai se ausentar</label>
+        <select id="fatAusPessoa"></select>
+      </div>
+      <div class="eq-datas">
+        <label>De <input type="date" id="fatAusInicio"></label>
+        <label>Até <input type="date" id="fatAusFim"></label>
+        <label>Motivo <select id="fatAusMotivo"></select></label>
+      </div>
+      <fieldset class="eq-opcoes">
+        <legend>Quem cobre</legend>
+        <div class="eq-opcao eq-opcao-linha">
+          <label class="eq-opcao-rotulo"><input type="radio" name="fatAusModo" value="uma" checked> <strong>Todos para uma pessoa</strong></label>
+          <label class="visualmente-oculto" for="fatAusPara">Pessoa que cobre</label>
+          <select id="fatAusPara"></select>
+        </div>
+        <label class="eq-opcao eq-opcao-rotulo"><input type="radio" name="fatAusModo" value="dividir"> <strong>Dividir convênio por convênio</strong></label>
+      </fieldset>
+      <div id="fatAusLista" class="eq-distribuir" hidden></div>
+      <div class="modal-botoes">
+        <button type="button" class="btn-cinza" data-fechar>Cancelar</button>
+        <button type="button" id="fatAusConfirmar" class="btn-primario">Registrar ausência</button>
+      </div>
+      <p id="fatAusMsg" class="msg-feedback erro" role="alert"></p>
+    </div>
+  </div>
+
+  <div id="fatModalImprimir" class="modal-overlay eq-modal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="fatImpTitulo">
+      <div class="modal-header">
+        <h2 id="fatImpTitulo">Imprimir distribuição</h2>
+        <button type="button" class="modal-fechar" data-fechar aria-label="Fechar">&times;</button>
+      </div>
+      <p class="painel-aviso">Abre a impressão do navegador. Para gerar o arquivo, escolha <strong>Salvar como PDF</strong> no destino.</p>
+      <fieldset class="eq-opcoes">
+        <legend>O que imprimir</legend>
+        <label class="eq-opcao eq-opcao-rotulo"><input type="radio" name="fatImpModo" value="geral" checked> <strong>Organização geral</strong> · todas as pessoas e seus convênios</label>
+        <label class="eq-opcao eq-opcao-rotulo"><input type="radio" name="fatImpModo" value="ausencias"> <strong>Ausências e redistribuição</strong> · quem está fora e com quem ficou cada convênio</label>
+        <div class="eq-opcao eq-opcao-linha">
+          <label class="eq-opcao-rotulo"><input type="radio" name="fatImpModo" value="pessoa"> <strong>Uma pessoa</strong></label>
+          <label class="visualmente-oculto" for="fatImpPessoa">Pessoa</label>
+          <select id="fatImpPessoa"></select>
+        </div>
+      </fieldset>
+      <div class="modal-botoes">
+        <button type="button" class="btn-cinza" data-fechar>Cancelar</button>
+        <button type="button" id="fatImpConfirmar" class="btn-primario">Imprimir / PDF</button>
+      </div>
+      <p id="fatImpMsg" class="msg-feedback erro" role="alert"></p>
+    </div>
+  </div>
+
+  <div id="fatModalConfirmar" class="modal-overlay eq-modal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="fatConfTitulo">
+      <div class="modal-header">
+        <h2 id="fatConfTitulo"></h2>
+        <button type="button" class="modal-fechar" data-fechar aria-label="Fechar">&times;</button>
+      </div>
+      <p id="fatConfTexto" class="painel-aviso"></p>
+      <ul id="fatConfLista" class="eq-lista-nomes"></ul>
+      <div class="modal-botoes">
+        <button type="button" class="btn-cinza" data-fechar>Cancelar</button>
+        <button type="button" id="fatConfBotao" class="btn-primario"></button>
+      </div>
+      <p id="fatConfMsg" class="msg-feedback erro" role="alert"></p>
+    </div>
+  </div>
+
+  <div id="fatModalCriar" class="modal-overlay eq-modal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="fatCriarTitulo">
+      <div class="modal-header">
+        <h2 id="fatCriarTitulo">Novo convênio</h2>
+        <button type="button" class="modal-fechar" data-fechar aria-label="Fechar">&times;</button>
+      </div>
+      <p class="painel-aviso">Sem responsável, ele entra na caixa Sem responsável e pode ser arrastada depois.</p>
+      <div class="modal-campo">
+        <label for="fatCriarNome">Nome do convênio</label>
+        <input type="text" id="fatCriarNome" autocomplete="off" spellcheck="false" placeholder="AMIL (Clínica)" data-1p-ignore data-lpignore="true">
+      </div>
+      <div class="modal-campo">
+        <label for="fatCriarResp">Faturista responsável</label>
+        <select id="fatCriarResp"></select>
+      </div>
+      <div class="modal-campo" id="fatCriarEmpresasCampo">
+        <label>Empresas que este faturista fecha</label>
+        <div class="fat-empresas" id="fatCriarEmpresas"></div>
+      </div>
+      <div class="modal-campo" id="fatCriarAgendaCampo">
+        <label for="fatCriarAgenda">Convênio no Calendário de entrega</label>
+        <select id="fatCriarAgenda"></select>
+        <p class="painel-aviso fat-agenda-dica">Empresas diferentes podem usar o mesmo convênio do calendário (ex.: "AMIL (Clínica)" e "AMIL (CTN)" → AMIL). Dá para associar depois, pelo lápis do card.</p>
+      </div>
+      <div class="modal-botoes">
+        <button type="button" class="btn-cinza" data-fechar>Cancelar</button>
+        <button type="button" id="fatCriarConfirmar" class="btn-primario">Criar convênio</button>
+      </div>
+      <p id="fatCriarMsg" class="msg-feedback erro" role="alert"></p>
+    </div>
+  </div>
+
+  <div id="fatModalEditar" class="modal-overlay eq-modal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="fatEditarTitulo">
+      <div class="modal-header">
+        <h2 id="fatEditarTitulo">Editar convênio</h2>
+        <button type="button" class="modal-fechar" data-fechar aria-label="Fechar">&times;</button>
+      </div>
+      <div class="modal-campo">
+        <label for="fatEditarNome">Nome do convênio</label>
+        <input type="text" id="fatEditarNome" autocomplete="off" spellcheck="false" data-1p-ignore data-lpignore="true">
+      </div>
+      <div class="modal-campo" id="fatEditarEmpresasCampo">
+        <label>Empresas que este faturista fecha</label>
+        <div class="fat-empresas" id="fatEditarEmpresas"></div>
+      </div>
+      <div class="modal-campo" id="fatEditarAgendaCampo">
+        <label for="fatEditarAgenda">Convênio no Calendário de entrega</label>
+        <select id="fatEditarAgenda"></select>
+      </div>
+      <p class="painel-aviso">Mudar o nome ou a agenda não muda o faturista. Excluir tira o convênio do quadro (o convênio do calendário continua lá).</p>
+      <div class="modal-botoes eq-editar-botoes">
+        <button type="button" id="fatEditarExcluir" class="btn-vermelho">Excluir</button>
+        <button type="button" class="btn-cinza" data-fechar>Cancelar</button>
+        <button type="button" id="fatEditarSalvar" class="btn-primario">Salvar</button>
+      </div>
+      <p id="fatEditarMsg" class="msg-feedback erro" role="alert"></p>
+    </div>
+  </div>
+
+  <!-- Clique num card do Faturamento: agenda e atalho para o calendário -->
+  <div id="fatModalTag" class="modal-overlay eq-modal" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="fatTagTitulo">
+      <div class="modal-header">
+        <h2 id="fatTagTitulo"></h2>
+        <button type="button" class="modal-fechar" data-fechar aria-label="Fechar">&times;</button>
+      </div>
+      <dl id="fatTagCorpo" class="cal-det-lista"></dl>
+      <div class="modal-botoes eq-editar-botoes">
+        <button type="button" id="fatTagEditar" class="btn-cinza" hidden>Editar / associar agenda</button>
+        <button type="button" class="btn-cinza" data-fechar>Fechar</button>
+        <button type="button" id="fatTagIr" class="btn-primario" hidden>Ir para a próxima entrega</button>
+      </div>
+      <p id="fatTagMsg" class="msg-feedback erro" role="alert"></p>
+    </div>
+  </div>
+
+  <div id="fatAviso" class="aviso-atualizacao" role="status" aria-live="polite" hidden></div>
+
+  <!-- ============================================================
+       CALENDÁRIO DE ENTREGA — MODAIS
+  ============================================================= -->
+  <div id="calModalDetalhe" class="modal-overlay cal-modal" hidden>
+    <div class="modal-card modal-card-largo" role="dialog" aria-modal="true" aria-labelledby="calDetTitulo">
+      <div class="modal-header">
+        <h2 id="calDetTitulo"></h2>
+        <button type="button" class="modal-fechar" data-fechar aria-label="Fechar">&times;</button>
+      </div>
+      <div id="calDetCorpo" class="cal-det"></div>
+      <div id="calDetAjuste" class="cal-det-ajuste" hidden></div>
+      <div class="modal-botoes">
+        <button type="button" id="calDetExcluir" class="btn-vermelho cal-det-excluir" hidden>Excluir convênio</button>
+        <button type="button" id="calDetEditar" class="btn-cinza" hidden>Editar convênio</button>
+      </div>
+      <p id="calDetMsg" class="msg-feedback erro" role="alert"></p>
+    </div>
+  </div>
+
+  <div id="calModalConvenio" class="modal-overlay cal-modal" hidden>
+    <div class="modal-card modal-card-xl" role="dialog" aria-modal="true" aria-labelledby="calConvTitulo">
+      <div class="modal-header">
+        <h2 id="calConvTitulo">Novo convênio</h2>
+        <button type="button" class="modal-fechar" data-fechar aria-label="Fechar">&times;</button>
+      </div>
+
+      <div class="modal-form-grid">
+        <div class="modal-campo modal-campo-full">
+          <label for="calConvNome">Nome do convênio</label>
+          <input type="text" id="calConvNome" autocomplete="off" placeholder="AMIL">
+          <p class="painel-aviso">Um convênio só, mesmo que mais de uma empresa fature: a data de entrega é a mesma para todas.</p>
+        </div>
+      </div>
+
+      <span class="cal-rotulo" id="calConvTipoRotulo">Como é a entrega</span>
+      <div id="calConvTipos" class="cal-tipos" role="group" aria-labelledby="calConvTipoRotulo">
+        <button type="button" class="cal-tipo" data-tipo="fixo"><strong>Dia fixo</strong><span>todo dia 10</span></button>
+        <button type="button" class="cal-tipo" data-tipo="periodo"><strong>Período</strong><span>do dia 1 ao 5</span></button>
+        <button type="button" class="cal-tipo" data-tipo="util"><strong>Dia útil</strong><span>até o 5º dia útil</span></button>
+        <button type="button" class="cal-tipo" data-tipo="livre"><strong>Livre</strong><span>dias da semana</span></button>
+      </div>
+
+      <div class="cal-config">
+        <div class="modal-campo" data-para="fixo periodo">
+          <label for="calConvInicio" id="calConvInicioRotulo">Dia do mês</label>
+          <input type="number" id="calConvInicio" min="1" max="31" step="1" class="cal-numero">
+        </div>
+        <div class="modal-campo" data-para="periodo">
+          <label for="calConvFim">Até o dia</label>
+          <input type="number" id="calConvFim" min="1" max="31" step="1" class="cal-numero">
+        </div>
+        <div class="modal-campo" data-para="util">
+          <label for="calConvUtil">Até o dia útil nº</label>
+          <input type="number" id="calConvUtil" min="1" max="23" step="1" class="cal-numero">
+        </div>
+        <div class="modal-campo" data-para="fixo periodo">
+          <label for="calConvAjuste">Se cair em fim de semana ou feriado</label>
+          <select id="calConvAjuste">
+            <option value="proximo">Adiar para o próximo dia útil</option>
+            <option value="anterior">Antecipar para o dia útil anterior</option>
+          </select>
+        </div>
+        <div class="modal-campo modal-campo-full" data-para="livre">
+          <span class="cal-rotulo" id="calConvSemanaRotulo">Dias em que aceita entrega</span>
+          <div id="calConvSemana" class="cal-empresas-form" role="group" aria-labelledby="calConvSemanaRotulo"></div>
+        </div>
+        <p class="painel-aviso modal-campo-full" data-para="util livre">Sábado, domingo e feriados nunca contam como dia de entrega.</p>
+      </div>
+
+      <span class="cal-rotulo">Próximas entregas calculadas</span>
+      <div id="calConvPrevia" class="cal-previa"></div>
+
+      <div class="modal-botoes cal-conv-botoes">
+        <button type="button" id="calConvDesativar" class="btn-vermelho" hidden>Excluir convênio</button>
+        <button type="button" class="btn-cinza" data-fechar>Cancelar</button>
+        <button type="button" id="calConvSalvar" class="btn-primario">Salvar convênio</button>
+      </div>
+      <p id="calConvMsg" class="msg-feedback erro" role="alert"></p>
+    </div>
+  </div>
+
+  <div id="calModalObs" class="modal-overlay cal-modal" hidden>
+    <div class="modal-card modal-card-largo" role="dialog" aria-modal="true" aria-labelledby="calObsTitulo">
+      <div class="modal-header">
+        <h2 id="calObsTitulo">Observações</h2>
+        <button type="button" class="modal-fechar" data-fechar aria-label="Fechar">&times;</button>
+      </div>
+      <div id="calObsLista" class="cal-obs-lista"></div>
+      <div id="calObsForm" class="cal-obs-form" hidden>
+        <div class="modal-campo">
+          <label for="calObsTexto">Nova observação</label>
+          <textarea id="calObsTexto" rows="3" placeholder="Feriado municipal, operadora não recebe hoje, entrega antecipada…"></textarea>
+        </div>
+        <label class="checkbox-label"><input type="checkbox" id="calObsSemExpediente"> Não há expediente neste dia</label>
+        <p class="painel-aviso cal-obs-dica">Marcado, o dia deixa de contar como dia útil e os prazos que caírem nele são recalculados pela regra de cada convênio.</p>
+        <div class="modal-botoes">
+          <button type="button" class="btn-cinza" data-fechar>Fechar</button>
+          <button type="button" id="calObsSalvar" class="btn-primario">Adicionar observação</button>
+        </div>
+      </div>
+      <p id="calObsMsg" class="msg-feedback erro" role="alert"></p>
+    </div>
+  </div>
 
   <!-- ============================================================
        AVISO DISCRETO DE ATUALIZAÇÃO EM TEMPO REAL
@@ -704,7 +1266,8 @@
   <script src="js/lib/supabase-2.116.0.js"></script>
   <script src="js/supabase.js"></script>
   <script src="js/dashboard.js"></script>
-  <script src="js/equipe.js"></script>
+  <script src="js/quadro.js"></script>
+  <script src="js/calendario.js"></script>
   <script src="js/layout.js"></script>
 
 </body>
